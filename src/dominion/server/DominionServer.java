@@ -23,6 +23,13 @@ public class DominionServer extends TorqueNetworkServer{
 	
 	private DominionGame mGame = new DominionGame();
 	
+	/**
+	 * Creates a new JDominion server. Clients may connect to this server to join the game hosted by the server.
+	 * 
+	 * @param aPort The port to listen on for client connections
+	 * @param aProtocol The protocol object to use for parsing messages
+	 * @throws IOException If an I/O error occurred while creating the server 
+	 */
 	public DominionServer(int aPort, DominionServerProtocol aProtocol)
 			throws IOException {
 		super(aPort, aProtocol);
@@ -59,7 +66,12 @@ public class DominionServer extends TorqueNetworkServer{
 			return;
 		}
 	}
-	
+	/**
+	 * Attempts to add a player to the game. If the player was added successfully will also send a NEW PLAYER message out to all clients connected to the game
+	 * to inform them of this historic event.
+	 * 
+	 * @param aName The name of the player who wishes to join
+	 */
 	public void addPlayer(String aName)
 	{
 		DominionPlayer lPlayer = null;

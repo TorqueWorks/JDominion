@@ -8,6 +8,7 @@ import dominion.game.DominionException;
 import dominion.game.DominionPlayer;
 import dominion.server.DominionServerProtocol;
 
+import torque.client.TorqueClientSocket;
 import torque.sockets.SocketCallback;
 
 public class DominionClientProtocol implements SocketCallback{
@@ -23,24 +24,33 @@ public class DominionClientProtocol implements SocketCallback{
 	
 	private Logger mLog = Logger.getLogger(DominionClientProtocol.class.getName());
 	
-	public DominionClientProtocol()
-	{
-	}
-	
+	/**
+	 * Sets the client that this protocol acts again.
+	 * 
+	 * @param aClient The client this protocol belongs to.
+	 */
 	public void setClient(DominionClient aClient)
 	{
 		mClient = aClient;
 	}
-	public void processMessage(String aMessage) {
+	
+	@Override
+	public void processMessage(String aMessage, TorqueClientSocket aReceiver) {
 		mLog.debug("Process Message - " + aMessage);
 		String[] lTokens = aMessage.split(DominionServerProtocol.SERVER_MSG_DELIM_REGEX);
 		
 		if(lTokens[0].equals(DominionServerProtocol.NEW_PLAYER_MSG))
 		{
-			processNewPlayerMessage(lTokens);
+			processNewPlayerMessage(lTokens, aReceiver);
 		}
 	}
 
+	/**
+	 * Creates a JOIN GAME message which is used to indicate to the server that a player wishes to join their game.
+	 * 
+	 * @param aName The name to display this user as
+	 * @return The complete JOIN GAME message as a string
+	 */
 	public static String createJoinGameMessage(String aName)
 	{
 		String lMessage = JOIN_GAME_MSG;
@@ -48,7 +58,12 @@ public class DominionClientProtocol implements SocketCallback{
 		return lMessage;
 	}
 	
-	private void processNewPlayerMessage(String[] aTokens)
+	/**
+	 * Process an incoming new player message. This message indicates that a new player has joined the game.
+	 * 
+	 * @param aTokens The parsed tokens of the message body
+	 */
+	private void processNewPlayerMessage(String[] aTokens, TorqueClientSocket aReceiver)
 	{
 		mLog.debug("Process New Player Message");
 		if (aTokens.length == 3)

@@ -8,7 +8,7 @@ import torque.sockets.SocketCallback;
 
 public class TorqueNetworkClient {
 	
-		private ClientSocket mClientSocketThread = null;
+		private TorqueClientSocket mClientSocketThread = null;
 		
 		/**
 		 * Creates a new client which will attempt to open a connection to the specified remote host on the specified
@@ -21,7 +21,7 @@ public class TorqueNetworkClient {
 		 * @throws IOException
 		 */
 	public TorqueNetworkClient(int aPort, String aIPAddress, SocketCallback aCallback) throws UnknownHostException, IOException {
-		mClientSocketThread = new ClientSocket(aPort, aIPAddress, aCallback);
+		mClientSocketThread = new TorqueClientSocket(aPort, aIPAddress, aCallback);
 		new Thread(mClientSocketThread).start();
 	}
 	
@@ -36,6 +36,11 @@ public class TorqueNetworkClient {
 		mClientSocketThread.sendMessage(aMessage);
 	}
 	
+	/**
+	 * Closes the underlying socket connection.
+	 * 
+	 * @throws IOException If an I/O error occured while attempting to close the socket
+	 */
 	public void closeSocket() throws IOException
 	{
 		mClientSocketThread.closeSocket();

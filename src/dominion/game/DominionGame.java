@@ -32,16 +32,18 @@ public class DominionGame {
 
 		//TODO: Better methods of doing this. Maybe created linked list of integers representing free spots then just pop/push whenever
 		//a spot is taken/freed?
-		
-		for(int i = 0; i < mPlayers.length; i++)
+		synchronized(mPlayers)
 		{
-			if(mPlayers[i] == null)
-			{ //This spot is empty, we can put our new player here
-				DominionPlayer lPlayer = new DominionPlayer(aName, i, this);
-				mPlayers[i] = lPlayer;
-				return lPlayer;
+			for(int i = 0; i < mPlayers.length; i++)
+			{
+				if(mPlayers[i] == null)
+				{ //This spot is empty, we can put our new player here
+					DominionPlayer lPlayer = new DominionPlayer(aName, i, this);
+					mPlayers[i] = lPlayer;
+					return lPlayer;
+				}
+	
 			}
-
 		}
 		//We went through the entire a
 		throw new DominionException("DominionGame::DominionPlayer","Maximum number of players reached for this game.");
@@ -90,7 +92,18 @@ public class DominionGame {
 		}
 	}
 	
-	
+	/**
+	 * Attempts to give a card from the card pool to the specified player. These must all hold true for the player to receive the card:
+	 * <ul>
+	 * <li>The PlayerID must be valid</li>
+	 * <li>The Card must exist in this game</li>
+	 * <li>The pile for this card must not be empty</li>
+	 * </ul>
+	 * 
+	 * @param aCard The card to give to the player
+	 * @param aPlayerID The ID of the player to receive the card
+	 * @throws DominionException If an error occured which prevented the player from receiving the card
+	 */
 	public void giveCardToPlayer(Card aCard, int aPlayerID) throws DominionException
 	{
 		mLog.debug("Giving Card " + aCard.getPrintName() + " to Player " + aPlayerID);

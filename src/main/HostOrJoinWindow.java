@@ -56,6 +56,9 @@ public class HostOrJoinWindow extends JFrame implements ActionListener{
 		new HostOrJoinWindow();
 	}
 	
+	/**
+	 * Creates a new window which gives the options to either create or host a game of JDominion.
+	 */
 	public HostOrJoinWindow()
 	{
 		this.setTitle(TOKEN_TITLE);
@@ -92,6 +95,11 @@ public class HostOrJoinWindow extends JFrame implements ActionListener{
 		this.setVisible(true);
 	}
 
+	/**
+	 * Creates a server using the specified port as the Server Port
+	 * @param aPort The port to accept connections on
+	 * @return <code>TRUE</code> if the server was successfully created, <code>FALSE</code> if it wasn't
+	 */
 	private boolean createServer(int aPort)
 	{
 		try {
@@ -105,9 +113,11 @@ public class HostOrJoinWindow extends JFrame implements ActionListener{
 	}
 	
 	/**
-	 * @param aIPAddress
-	 * @param aPort
-	 * @return
+	 * Creates a client which will attempt to connect to the server at the specified IP and port.
+	 * 
+	 * @param aIPAddress The IP address/Hostname of the server to connect to
+	 * @param aPort The port the server is listening on
+	 * @return <code>TURE</code> if the client successfully connected to the server, <code>FALSE</code> if not
 	 */
 	private boolean createClient(String aIPAddress, int aPort)
 	{

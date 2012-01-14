@@ -8,7 +8,7 @@ import javax.net.ServerSocketFactory;
 
 import org.apache.log4j.Logger;
 
-import torque.client.ClientSocket;
+import torque.client.TorqueClientSocket;
 import torque.sockets.SocketCallback;
 
 public class TorqueServerSocket{
@@ -16,7 +16,7 @@ public class TorqueServerSocket{
 	private ServerSocket mServerSocket = null;
 	private SocketCallback mCallback = null;
 	
-	private static ArrayList<ClientSocket> mClientSocketThreads = new ArrayList<ClientSocket>();
+	private static ArrayList<TorqueClientSocket> mClientSocketThreads = new ArrayList<TorqueClientSocket>();
 	private static ArrayList<Thread> mAcceptorThreads = new ArrayList<Thread>();
 	
 	private static final int MAX_ACCEPTION_THREADS = 5;
@@ -80,7 +80,7 @@ public class TorqueServerSocket{
 				while(!mServerSocket.isClosed())
 				{ //Keep accepting connections as long as the socket is open
 					mLog.debug("Listening for connection on Port " + mServerSocket.getLocalPort() + "...");
-					ClientSocket cst = new ClientSocket(mServerSocket.accept(), mCallback);
+					TorqueClientSocket cst = new TorqueClientSocket(mServerSocket.accept(), mCallback);
 					mLog.debug("Connection accepted on port " + cst.getLocalPort() + " from " + cst.getRemoteAddress() + ":" + cst.getRemotePort());
 					Thread.sleep(1000);  //Sleep for a second to allow the connection to initialize
 					new Thread(cst).start(); //Create a new thread to run the ClientSocket and start it...

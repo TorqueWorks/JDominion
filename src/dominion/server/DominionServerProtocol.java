@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 
 import dominion.client.DominionClientProtocol;
 import dominion.game.DominionPlayer;
+import torque.client.TorqueClientSocket;
 import torque.sockets.SocketCallback;
 
 public class DominionServerProtocol implements SocketCallback{
@@ -19,19 +20,25 @@ public class DominionServerProtocol implements SocketCallback{
 	
 	private Logger mLog = Logger.getLogger(DominionServerProtocol.class.getName());
 	
+
+	/**
+	 * Sets the server this Protocol will act against.
+	 * 
+	 * @param aServer The server this protocol belongs to
+	 */
 	public void setServer(DominionServer aServer)
 	{
 		mServer = aServer;
 	}
 	
 	@Override
-	public void processMessage(String aMessage) {
+	public void processMessage(String aMessage, TorqueClientSocket aReceiver) {
 		mLog.debug("Process message - " + aMessage);
 		//Use pattern here because split expects a regex so if the delimiter is a reserved character we need to escape it
 		String[] lTokens = aMessage.split(DominionClientProtocol.CLIENT_MSG_DELIM_REGEX);
 		if(lTokens[0].equals(DominionClientProtocol.JOIN_GAME_MSG))
 		{
-			processJoinGameMessage(lTokens);
+			processJoinGameMessage(lTokens, aReceiver);
 		}
 		
 	}
@@ -57,7 +64,14 @@ public class DominionServerProtocol implements SocketCallback{
 		return lMessage.toString();
 	}
 	
-	private void processJoinGameMessage(String[] aTokens)
+	/**
+	 * Process a received JOIN GAME message. This message indicates that a player wishes to join the game hosted
+	 * by this server. 
+	 * 
+	 * @param aTokens The contents of the message body
+	 * @param aReceiver The socket the message was received from
+	 */
+	private void processJoinGameMessage(String[] aTokens, TorqueClientSocket aReceiver)
 	{
 		mLog.debug("Process Join Game Message");
 		if(aTokens.length == DominionClientProtocol.JOIN_GAME_MSG_LEN)

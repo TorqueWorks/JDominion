@@ -12,13 +12,24 @@ public class DominionClientWindow extends JFrame{
 	private JPanel mContent;
 	public JTextArea mTextArea;
 	
+	/**
+	 * The UI for a client. 
+	 * @param aClient
+	 */
 	public DominionClientWindow(DominionClient aClient)
 	{
 		mClient = aClient;
-		init();
+		initComponents();
+		this.setTitle("Dominion Client");
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		this.pack();
+		this.setVisible(true);
 	}
 	
-	private void init()
+	/**
+	 * Creates and initializes the various components of the GUI.
+	 */
+	private void initComponents()
 	{
 		mContent = new JPanel();
 		
@@ -27,10 +38,7 @@ public class DominionClientWindow extends JFrame{
 		mContent.add(mTextArea);
 		
 		this.setContentPane(mContent);
-		this.setTitle("Dominion Client");
-		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		this.pack();
-		this.setVisible(true);
+
 		
 	}
 }

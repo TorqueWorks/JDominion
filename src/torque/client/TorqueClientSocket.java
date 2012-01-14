@@ -38,8 +38,8 @@ public class TorqueClientSocket implements Runnable{
 	 * is used to process input. Note this will used the default encoding DEFAULT_OUTPUT_ENCODING to encode
 	 * outgoing communication with.
 	 * 
-	 * @param aPort
-	 * @param aIPAddress
+	 * @param aIPAddress IPAddress/Hostname to connect to
+	 * @param aPort Port to connect to
 	 * @param aCallback The SocketCallback object used to process input
 	 * @param aChannelID The ID used to identify which ClientSocket a message came in on
 	 * @throws IOException
@@ -59,30 +59,31 @@ public class TorqueClientSocket implements Runnable{
 		mOutSTX = String.valueOf((char)0x02);
 		mOutETX = String.valueOf((char)0x03);
 		
-		BufferedInputStream bis = new BufferedInputStream(mSocket.getInputStream());
-		in = new InputStreamReader(bis, DEFAULT_INPUT_ENCODING);
+		BufferedInputStream lbis = new BufferedInputStream(mSocket.getInputStream());
+		in = new InputStreamReader(lbis, DEFAULT_INPUT_ENCODING);
 		
-		BufferedOutputStream bos = new BufferedOutputStream(mSocket.getOutputStream());
-		out = new OutputStreamWriter(bos,DEFAULT_OUTPUT_ENCODING);
+		BufferedOutputStream lbos = new BufferedOutputStream(mSocket.getOutputStream());
+		out = new OutputStreamWriter(lbos,DEFAULT_OUTPUT_ENCODING);
 	}
 	
 	/**
 	 * Creates a new connection object which listens and writes on the socket passed in. The SocketCallback class
 	 * is used to process input. This will also encode any outgoing communication in the format passed in.
 	 * 
-	 * @param s The socket to communicate on
-	 * @param scb The SocketCallback object used to process input
+	 * @param aIPAddress IPAddress/Hostname to connect to
+	 * @param aPort Port to connect to
+	 * @param aCallback The SocketCallback object used to process input
 	 * @param aOutputEncoding The character encoding to use for outgoing communication
 	 * @throws IOException
 	 */
-	public TorqueClientSocket(int aPort, String aIPAddress, SocketCallback scb, String aOutputEncoding) throws IOException
+	public TorqueClientSocket(int aPort, String aIPAddress, SocketCallback aCallback, String aOutputEncoding) throws IOException
 	{
-		if (scb == null)
+		if (aCallback == null)
 		{
 			return; //TODO: Throw an exception or something
 		}
 		mSocket = new Socket(aIPAddress, aPort);
-		mSocketCallback = scb;
+		mSocketCallback = aCallback;
 
 		//TODO Don't hardcode these
 		mInSTX = 0x02;
@@ -98,6 +99,14 @@ public class TorqueClientSocket implements Runnable{
 		
 	}
 
+	/**
+	 * Creates a new connection object which listens and writes on the socket passed in. The SocketCallback class
+	 * is used to process input. This will also encode any outgoing communication in the format passed in.
+	 * 
+	 * @param aSocket The socket to communicate on
+	 * @param aCallback The SocketCallback object used to process input
+	 * @throws IOException
+	 */
 	public TorqueClientSocket(Socket aSocket, SocketCallback aCallback) throws IOException, InvalidParameterException
 	{
 		if(aSocket == null)
@@ -167,6 +176,10 @@ public class TorqueClientSocket implements Runnable{
 		mOutETX = String.valueOf((char)aNewETX);
 	}
 	
+	/**
+	 * Constantly reads input from the socket until the EOS is reached or an error occurs. Calls the
+	 * callback whenever a complete message is received
+	 */
 	@Override
 	public void run() 
 	{
