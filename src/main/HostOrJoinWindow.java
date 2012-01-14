@@ -15,6 +15,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -35,6 +36,12 @@ public class HostOrJoinWindow extends JFrame implements ActionListener{
 	 */
 	private static final long serialVersionUID = 1L;
 	
+	private static final String TOKEN_TITLE = "JDominion";
+	private static final String TOKEN_INVALID_PORT = "The port was invalid. \nValid ports are between 1024 and 65535.";
+	
+	private static final String ACTION_JOIN = "JOIN";
+	private static final String ACTION_HOST = "HOST";
+	
 	private JButton mBHost = new JButton("Host");
 	private JButton mBJoin = new JButton("Join");
 	private JLabel mLIPAddr = new JLabel("IP Address");
@@ -51,12 +58,12 @@ public class HostOrJoinWindow extends JFrame implements ActionListener{
 	
 	public HostOrJoinWindow()
 	{
-		this.setTitle("JDominion");
+		this.setTitle(TOKEN_TITLE);
 		JPanel content = new JPanel(new BorderLayout());
 		
-		mBHost.setActionCommand("Host");
+		mBHost.setActionCommand(ACTION_HOST);
 		mBHost.addActionListener(this);
-		mBJoin.setActionCommand("Join");
+		mBJoin.setActionCommand(ACTION_JOIN);
 		mBJoin.addActionListener(this);
 		
 		JPanel lBPanel = new JPanel(new GridLayout(2,1));
@@ -81,7 +88,7 @@ public class HostOrJoinWindow extends JFrame implements ActionListener{
 				Toolkit.getDefaultToolkit().getScreenSize().height / 2 - (WINDOW_DEFAULT_HEIGHT / 2));
 		this.pack();
 		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		
+		mTFIPAddr.requestFocusInWindow();
 		this.setVisible(true);
 	}
 
@@ -117,18 +124,19 @@ public class HostOrJoinWindow extends JFrame implements ActionListener{
 	}
 	@Override
 	public void actionPerformed(ActionEvent a) {
-		if(a.getActionCommand().equals("Host"))
+		if(a.getActionCommand().equals(ACTION_HOST))
 		{
-			mBHost.setEnabled(false);
-			mBJoin.setEnabled(true);
 			int lPort;
 			try
 			{
 				lPort = Integer.parseInt(mTFPort.getText());
+				if(lPort < 1024 || lPort > 65535) throw new Exception();
 			}
-			catch(NumberFormatException e)
+			catch(Exception e)
 			{
-				//Let the user know the port was invalid
+				JOptionPane.showMessageDialog(this, TOKEN_INVALID_PORT, getTitle(), JOptionPane.ERROR_MESSAGE);
+				mTFPort.requestFocusInWindow();
+				mTFPort.selectAll();
 				return;
 			}
 			if(createServer(lPort))
@@ -137,7 +145,7 @@ public class HostOrJoinWindow extends JFrame implements ActionListener{
 				this.dispose(); //We have the server and client set up so we're all done here
 			}
 		}
-		else if (a.getActionCommand().equals("Join"))
+		else if (a.getActionCommand().equals(ACTION_JOIN))
 		{
 			int lPort;
 			try
@@ -149,8 +157,6 @@ public class HostOrJoinWindow extends JFrame implements ActionListener{
 				//Let the user know the port was invalid
 				return;
 			}
-			mBHost.setEnabled(true);
-			mBJoin.setEnabled(false);
 			if(createClient(mTFIPAddr.getText(), lPort))
 			{ //The client was successfully created, we can dispose of this window now
 				this.dispose();
