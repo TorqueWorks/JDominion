@@ -12,7 +12,7 @@ import org.apache.log4j.Logger;
 
 import torque.sockets.SocketCallback;
 
-public class ClientSocket implements Runnable{
+public class TorqueClientSocket implements Runnable{
 
 	private Socket mSocket = null;
 	private SocketCallback mSocketCallback = null;
@@ -26,7 +26,7 @@ public class ClientSocket implements Runnable{
 	
 	private StringBuffer lInBuffer = new StringBuffer();
 	
-	private Logger mLog = Logger.getLogger(ClientSocket.class.getName());
+	private Logger mLog = Logger.getLogger(TorqueClientSocket.class.getName());
 	
 	public static final String DEFAULT_OUTPUT_ENCODING = "US-ASCII"; //Default character encoding for outgoing communication
 	public static final String DEFAULT_INPUT_ENCODING = "US-ASCII"; //Default character encoding for incoming communication
@@ -41,9 +41,10 @@ public class ClientSocket implements Runnable{
 	 * @param aPort
 	 * @param aIPAddress
 	 * @param aCallback The SocketCallback object used to process input
+	 * @param aChannelID The ID used to identify which ClientSocket a message came in on
 	 * @throws IOException
 	 */
-	public ClientSocket(int aPort, String aIPAddress, SocketCallback aCallback) throws IOException
+	public TorqueClientSocket(int aPort, String aIPAddress, SocketCallback aCallback) throws IOException
 	{
 		if(aCallback == null)
 		{
@@ -74,7 +75,7 @@ public class ClientSocket implements Runnable{
 	 * @param aOutputEncoding The character encoding to use for outgoing communication
 	 * @throws IOException
 	 */
-	public ClientSocket(int aPort, String aIPAddress, SocketCallback scb, String aOutputEncoding) throws IOException
+	public TorqueClientSocket(int aPort, String aIPAddress, SocketCallback scb, String aOutputEncoding) throws IOException
 	{
 		if (scb == null)
 		{
@@ -97,7 +98,7 @@ public class ClientSocket implements Runnable{
 		
 	}
 
-	public ClientSocket(Socket aSocket, SocketCallback aCallback) throws IOException, InvalidParameterException
+	public TorqueClientSocket(Socket aSocket, SocketCallback aCallback) throws IOException, InvalidParameterException
 	{
 		if(aSocket == null)
 		{
@@ -187,7 +188,7 @@ public class ClientSocket implements Runnable{
 				else if (lReadChar == mInETX) 
 				{ //End of message, send contents of buffer to be processed then reset buffer
 					mLog.debug("Found ETX (" + lInBuffer.toString() + ")");
-					mSocketCallback.processMessage(lInBuffer.toString());
+					mSocketCallback.processMessage(lInBuffer.toString(), this);
 					lInBuffer.setLength(0);
 					mHaveSTX = false;
 				}
