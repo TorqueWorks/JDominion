@@ -13,9 +13,9 @@ import torque.sockets.SocketCallback;
 
 public class DominionClient extends TorqueNetworkClient{
 
-	DominionGame mGame = new DominionGame();
+	private DominionGame mGame = new DominionGame();
 		
-	DominionClientWindow mWindow;
+	private DominionClientWindow mWindow;
 	
 	/**
 	 * A client for the JDominion game. This client connects to a JDominion server and provides a GUI to interact with the game.
@@ -44,6 +44,16 @@ public class DominionClient extends TorqueNetworkClient{
 	{
 		mGame.addPlayer(aName, aID);
 		mWindow.mTextArea.append("Player " + aName + " has joined!\n");
+	}
+	
+	/**
+	 * Prints a message to the UI for this client.
+	 * 
+	 * @param aMessage The message to display
+	 */
+	protected void displayMessage(String aMessage)
+	{
+		mWindow.displayMessage(aMessage);
 	}
 
 }

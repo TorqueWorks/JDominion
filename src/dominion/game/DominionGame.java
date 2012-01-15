@@ -102,7 +102,7 @@ public class DominionGame {
 	 * 
 	 * @param aCard The card to give to the player
 	 * @param aPlayerID The ID of the player to receive the card
-	 * @throws DominionException If an error occured which prevented the player from receiving the card
+	 * @throws DominionException If an error occurred which prevented the player from receiving the card
 	 */
 	public void giveCardToPlayer(Card aCard, int aPlayerID) throws DominionException
 	{

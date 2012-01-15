@@ -1,5 +1,6 @@
 package dominion.client;
 
+import java.io.IOException;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
@@ -19,8 +20,12 @@ public class DominionClientProtocol implements SocketCallback{
 	public static final String CLIENT_MSG_DELIM_REGEX = Pattern.quote(CLIENT_MSG_DELIM);
 	
 	public static final String JOIN_GAME_MSG = "JOINGAME";
+	public static final int JOIN_GAME_MSG_NUM_FIELDS = 3;
 	
 	public static final int JOIN_GAME_MSG_LEN = 2;
+	
+	private static final String TOKEN_JOIN_GAME_SUCCESS = "Successfully joined game!";
+	private static final String TOKEN_JOIN_GAME_FAILURE = "Failed to join game.";
 	
 	private Logger mLog = Logger.getLogger(DominionClientProtocol.class.getName());
 	
@@ -39,9 +44,18 @@ public class DominionClientProtocol implements SocketCallback{
 		mLog.debug("Process Message - " + aMessage);
 		String[] lTokens = aMessage.split(DominionServerProtocol.SERVER_MSG_DELIM_REGEX);
 		
+		if(lTokens.length < 1)
+		{
+			mLog.error("Received message with invalid number of fields - " + aMessage);
+			return;
+		}
 		if(lTokens[0].equals(DominionServerProtocol.NEW_PLAYER_MSG))
 		{
 			processNewPlayerMessage(lTokens, aReceiver);
+		}
+		else if (lTokens[0].equals(DominionServerProtocol.JOIN_GAME_RESP_MSG))
+		{
+			processJoinGameRespMessage(lTokens, aReceiver);
 		}
 	}
 
@@ -66,7 +80,7 @@ public class DominionClientProtocol implements SocketCallback{
 	private void processNewPlayerMessage(String[] aTokens, TorqueClientSocket aReceiver)
 	{
 		mLog.debug("Process New Player Message");
-		if (aTokens.length == 3)
+		if (aTokens.length == DominionServerProtocol.NEW_PLAYER_MSG_NUM_FIELDS)
 		{
 			try
 			{
@@ -81,6 +95,36 @@ public class DominionClientProtocol implements SocketCallback{
 			{
 				mLog.error(de.getMessage());
 				return;
+			}
+		}
+	}
+	
+	/**
+	 * Process a received Join Game Response message. This message indicates the success of a join game request sent out by this client.
+	 * 
+	 * @param aTokens The tokens from the body of this message
+	 * @param aReceiver The socket we received the message on
+	 */
+	private void processJoinGameRespMessage(String[] aTokens, TorqueClientSocket aReceiver)
+	{
+		mLog.debug("Process Join Game Resp Message");
+		if(aTokens.length == DominionServerProtocol.JOIN_GAME_RESP_NUM_FIELDS)
+		{
+			boolean lSuccess = Boolean.parseBoolean(aTokens[1]);
+			if(lSuccess)
+			{
+				mClient.displayMessage(TOKEN_JOIN_GAME_SUCCESS);
+			}
+			else
+			{
+				mClient.displayMessage(TOKEN_JOIN_GAME_FAILURE);
+				try {
+					//TODO: The server should be the one doing the disconnecting
+					aReceiver.closeSocket();
+				} catch (IOException e) {
+					mLog.error("Could not close client socket - " + e.getMessage());
+					return;
+				}
 			}
 		}
 	}

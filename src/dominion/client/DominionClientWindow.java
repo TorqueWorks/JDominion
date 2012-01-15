@@ -23,6 +23,7 @@ public class DominionClientWindow extends JFrame{
 		this.setTitle("Dominion Client");
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.pack();
+		this.setLocationRelativeTo(null);
 		this.setVisible(true);
 	}
 	
@@ -40,5 +41,20 @@ public class DominionClientWindow extends JFrame{
 		this.setContentPane(mContent);
 
 		
+	}
+	
+	/**
+	 * Prints a message to the UI. Will ignore empty strings. Will also add a newline after every message so including
+	 * newlines in the message itself will cause the dialog to skip multiple lines.
+	 * 
+	 * @param aMessage The message to display
+	 */
+	protected void displayMessage(String aMessage)
+	{
+		if(!aMessage.equals("")) 
+		{
+			mTextArea.append(aMessage);
+			mTextArea.append("\n");
+		}
 	}
 }

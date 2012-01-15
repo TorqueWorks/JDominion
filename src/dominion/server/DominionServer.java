@@ -71,16 +71,12 @@ public class DominionServer extends TorqueNetworkServer{
 	 * to inform them of this historic event.
 	 * 
 	 * @param aName The name of the player who wishes to join
+	 * @throws DominionException 
 	 */
-	public void addPlayer(String aName)
+	public void addPlayer(String aName) throws DominionException
 	{
 		DominionPlayer lPlayer = null;
-		try {
-			lPlayer = mGame.addPlayer(aName);
-		} catch (DominionException e1) {
-			mLog.error(e1.getMessage());
-			return;
-		}
+		lPlayer = mGame.addPlayer(aName);
 
 		try {
 			this.sendMessage(DominionServerProtocol.createNewPlayerMessage(lPlayer));
