@@ -14,7 +14,10 @@ import torque.sockets.SocketCallback;
 public class DominionClient extends TorqueNetworkClient{
 
 	private DominionGame mGame = new DominionGame();
-		
+	
+	private boolean mIsAdmin = false;
+	private int mPlayerID = -1;
+	
 	private DominionClientWindow mWindow;
 	
 	/**
@@ -25,14 +28,34 @@ public class DominionClient extends TorqueNetworkClient{
 	 * @throws UnknownHostException Indicates that the IPAddress/Hostname could not be resolved
 	 * @throws IOException If a general I/O error occurred while connecting to the server
 	 */
-	public DominionClient(int aPort, String aIPAddress, DominionClientProtocol aProtocol)
+	public DominionClient(int aPort, String aIPAddress, DominionClientProtocol aProtocol, boolean aIsAdmin)
 			throws UnknownHostException, IOException {
 		super(aPort, aIPAddress, aProtocol);
+		mIsAdmin = aIsAdmin;
 		aProtocol.setClient(this);
-		this.sendMessage(DominionClientProtocol.createJoinGameMessage("zomg"));
+		this.sendMessage(DominionClientProtocol.createJoinGameMessage("zomg", aIsAdmin));
 		mWindow = new DominionClientWindow(this);
 	}
 	
+	/**
+	 * Returns whether this client is an admin or not
+	 * 
+	 * @return <code>TRUE</code> if the client is an admin, <code>FALSE</code> if not
+	 */
+	protected boolean isAdmin()
+	{
+		return mIsAdmin;
+	}
+	
+	protected int getPlayerID()
+	{
+		return mPlayerID;
+	}
+	
+	protected void setPlayerID(int aPlayerID)
+	{
+		mPlayerID = aPlayerID;
+	}
 	/**
 	 * Adds a player with the specified ID to the game. 
 	 * 
@@ -42,8 +65,8 @@ public class DominionClient extends TorqueNetworkClient{
 	 */
 	public void addPlayer(String aName, int aID) throws DominionException
 	{
-		mGame.addPlayer(aName, aID);
-		mWindow.mTextArea.append("Player " + aName + " has joined!\n");
+		mGame.addPlayer(aName, aID, false); //Client doesn't care about storing other players admin status so just set to false
+		mWindow.displayMessage("Player " + aName + " has joined!");
 	}
 	
 	/**

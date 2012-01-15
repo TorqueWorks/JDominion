@@ -13,6 +13,7 @@ public class DominionPlayer {
 	private final String mName;
 	private final int mID;
 	private final DominionGame mGame;
+	private final boolean mIsAdmin;
 	
 	private final List<Card> mDeck = new LinkedList<Card>();
 	private final List<Card> mDiscard = new LinkedList<Card>();
@@ -24,15 +25,21 @@ public class DominionPlayer {
 	 * 
 	 * @param aName The name of this player. This is purely for display purposes, the ID is used to identify the player
 	 * @param aID The game-unique identifier
-	 * @param aGame
+	 * @param aIsAdmin Whether this player is an admin or not
+	 * @param aGame The game this player is playing in
 	 */
-	protected DominionPlayer(String aName, int aID, DominionGame aGame)
+	protected DominionPlayer(String aName, int aID, boolean aIsAdmin, DominionGame aGame)
 	{
 		mName = aName;
 		mID = aID;
 		mGame = aGame;
+		mIsAdmin = aIsAdmin;
 	}
 	
+	protected boolean isAdmin() {
+		return mIsAdmin;
+	}
+
 	/**
 	 * Gets the name of this player. Note that the name is note used to identify the player in any way, use {@link #getID()} for that.
 	 * @return The string representing the name of the this player.

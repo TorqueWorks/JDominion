@@ -117,12 +117,13 @@ public class HostOrJoinWindow extends JFrame implements ActionListener{
 	 * 
 	 * @param aIPAddress The IP address/Hostname of the server to connect to
 	 * @param aPort The port the server is listening on
+	 * @param aIsAdmin Whether this client is an admin for the game or not
 	 * @return <code>TURE</code> if the client successfully connected to the server, <code>FALSE</code> if not
 	 */
-	private boolean createClient(String aIPAddress, int aPort)
+	private boolean createClient(String aIPAddress, int aPort, boolean aIsAdmin)
 	{
 		try {
-			new DominionClient(aPort, aIPAddress, new DominionClientProtocol());
+			new DominionClient(aPort, aIPAddress, new DominionClientProtocol(), aIsAdmin);
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 			return false;
@@ -151,7 +152,7 @@ public class HostOrJoinWindow extends JFrame implements ActionListener{
 			}
 			if(createServer(lPort))
 			{ //We successfully created the server, now create the client for this user
-				createClient("localhost", lPort);
+				createClient("localhost", lPort, true); //This user created the game so is an admin
 				this.dispose(); //We have the server and client set up so we're all done here
 			}
 		}
@@ -167,7 +168,7 @@ public class HostOrJoinWindow extends JFrame implements ActionListener{
 				//Let the user know the port was invalid
 				return;
 			}
-			if(createClient(mTFIPAddr.getText(), lPort))
+			if(createClient(mTFIPAddr.getText(), lPort, false))
 			{ //The client was successfully created, we can dispose of this window now
 				this.dispose();
 			}

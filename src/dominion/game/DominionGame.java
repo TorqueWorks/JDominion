@@ -23,10 +23,11 @@ public class DominionGame {
 	 * or throw an exception
 	 * 
 	 * @param aName The name of this player
+	 * @param aIsAdmin Whether the player is an admin or not
 	 * @return The {@link DominionPlayer} object created for the new player
 	 * @throws DominionException If this game has reached the maximum number of players defined
 	 */
-	public DominionPlayer addPlayer(String aName) throws DominionException
+	public DominionPlayer addPlayer(String aName, boolean aIsAdmin) throws DominionException
 	{
 		mLog.debug("Adding player \"" + aName + "\"");
 
@@ -38,7 +39,7 @@ public class DominionGame {
 			{
 				if(mPlayers[i] == null)
 				{ //This spot is empty, we can put our new player here
-					DominionPlayer lPlayer = new DominionPlayer(aName, i, this);
+					DominionPlayer lPlayer = new DominionPlayer(aName, i, aIsAdmin, this);
 					mPlayers[i] = lPlayer;
 					return lPlayer;
 				}
@@ -55,16 +56,17 @@ public class DominionGame {
 	 * 
 	 * @param aName The name of this player
 	 * @param aID The game-unique ID for this player
+	 * @param aIsAdmin Whether the player is an admin or not
 	 * @return The DominionPlayer object created for the new player
 	 * @throws DominionException If the ID is invalid ( < 0 or >= MAX_PLAYERS) or a player with that ID already exists
 	 */
-	public DominionPlayer addPlayer(String aName, int aID) throws DominionException
+	public DominionPlayer addPlayer(String aName, int aID, boolean aIsAdmin) throws DominionException
 	{
 		mLog.debug("Adding player \"" + aName + "\" with ID " + aID);
 		if(aID < 0 || aID >= MAX_PLAYERS) throw new DominionException("DominionGame::addPlayer", "Invalid ID " + aID);
 		if(mPlayers[aID] != null) throw new DominionException("DominionGame::addPlayer","Player with that ID already exists");
 		
-		DominionPlayer lPlayer = new DominionPlayer(aName, aID, this);
+		DominionPlayer lPlayer = new DominionPlayer(aName, aID, aIsAdmin, this);
 		mPlayers[aID] = lPlayer;
 		return lPlayer;
 	}
@@ -118,4 +120,26 @@ public class DominionGame {
 		
 	}
 	
+	/**
+	 * Checks whether the player specified by the ID is an admin or not.
+	 * 
+	 * @param aPlayerID The ID of the player to check
+	 * @return <code>TRUE</code> if the player is an admin, <code>FALSE</code> if not
+	 */
+	public boolean isPlayerAdmin(int aPlayerID)
+	{
+		if(aPlayerID >= 0 && aPlayerID < MAX_PLAYERS && mPlayers[aPlayerID] != null) return mPlayers[aPlayerID].isAdmin();
+		return false;
+	}
+	
+	/**
+	 * Returns a mapping of all the cards in this pool along with the number of that card left in the pool.
+	 * @return
+	 */
+	public HashMap<Card,Integer> getCardsInPool()
+	{
+		HashMap<Card,Integer> lRet = new HashMap<Card,Integer>();
+		lRet.putAll(mCardPool);
+		return lRet;
+	}
 }

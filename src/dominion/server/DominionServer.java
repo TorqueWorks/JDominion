@@ -45,11 +45,11 @@ public class DominionServer extends TorqueNetworkServer{
 	private void initGame()
 	{
 		addCardToPool(Cards.mCards.get(0), 30); //Copper
-		addCardToPool(Cards.mCards.get(0), 30); //Silver
-		addCardToPool(Cards.mCards.get(0), 20); //Gold
-		addCardToPool(Cards.mCards.get(0), 20); //Estate
-		addCardToPool(Cards.mCards.get(0), 20); //Duchy
-		addCardToPool(Cards.mCards.get(0), 10); //Province
+		addCardToPool(Cards.mCards.get(1), 30); //Silver
+		addCardToPool(Cards.mCards.get(2), 20); //Gold
+		addCardToPool(Cards.mCards.get(3), 20); //Estate
+		addCardToPool(Cards.mCards.get(4), 20); //Duchy
+		addCardToPool(Cards.mCards.get(5), 10); //Province
 	}
 
 	/**
@@ -71,18 +71,59 @@ public class DominionServer extends TorqueNetworkServer{
 	 * to inform them of this historic event.
 	 * 
 	 * @param aName The name of the player who wishes to join
+	 * @return The player object for the new player
 	 * @throws DominionException 
 	 */
-	public void addPlayer(String aName) throws DominionException
+	protected DominionPlayer addPlayer(String aName, boolean aIsAdmin) throws DominionException
 	{
 		DominionPlayer lPlayer = null;
-		lPlayer = mGame.addPlayer(aName);
+		lPlayer = mGame.addPlayer(aName, aIsAdmin);
 
 		try {
 			this.sendMessage(DominionServerProtocol.createNewPlayerMessage(lPlayer));
 		} catch (IOException e) {
 			mLog.error(e.getMessage());
-			return;
 		}
+		return lPlayer;
 	}
+	
+	/**
+	 * Checks whether the player specified by the given ID is an admin or not.
+	 * 
+	 * @param aPlayerID The ID of the player to check
+	 * @return <code>TRUE</code> if the player is an admin, <code>FALSE</code> if not
+	 */
+	protected boolean isPlayerAdmin(int aPlayerID)
+	{
+		return mGame.isPlayerAdmin(aPlayerID);
+	}
+	/**
+	 * Starts the game. This will only do something if the game is currently in the JOINING state.
+	 * Events that occur:
+	 * <ol>
+	 * <li>Cards for pool are chosen</li>
+	 * <li>Players are given their initial set of cards</li>
+	 * <li>The player who goes first is chosen</li>
+	 * <li>The game begins play</li>
+	 * </ol>
+	 * @throws IOException 
+	 */
+	protected void startGame() throws IOException
+	{
+		//TODO: Have players choose cards
+		int[] lChosenCards = new int[10];
+		for(int i = 0; i < 10; i++)
+		{
+			try {
+				mGame.addCardToPool(Cards.mCards.get(i + 6), 10);
+			
+			} catch (DominionException e) {
+				mLog.error(e.getMessage());
+			}
+			lChosenCards[i] = i + 6;
+		}
+		sendMessage(DominionServerProtocol.createInitGameMessage(mGame.getCardsInPool()));
+	}
+	
+	
 }

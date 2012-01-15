@@ -1,16 +1,33 @@
 package dominion.client;
 
+import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.IOException;
 
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 
-public class DominionClientWindow extends JFrame{
+import org.apache.log4j.Logger;
+
+public class DominionClientWindow extends JFrame implements ActionListener{
 
 	private DominionClient mClient;
-	private JPanel mContent;
-	public JTextArea mTextArea;
+	private JPanel mContent, mAdminButtonPanel;
+	private JButton mStartGame;
+	
+	private JTextArea mTextArea;
+	//Localization tokens
+	private static final String TOKEN_START_GAME_BUTTON_TEXT = "Start Game";
+	private static final String TOKEN_STARTING_BUTTON_TEXT = "Starting...";
+	private static final String TOKEN_START_GAME_FAILED = "Failed to start game";
+	//Actions
+	private static final String ACTION_START_GAME = "START";
+	
+	private static final Logger mLog = Logger.getLogger(DominionClientWindow.class.getName());
 	
 	/**
 	 * The UI for a client. 
@@ -32,11 +49,23 @@ public class DominionClientWindow extends JFrame{
 	 */
 	private void initComponents()
 	{
-		mContent = new JPanel();
+		mContent = new JPanel(new BorderLayout());
 		
 		mTextArea = new JTextArea();
 		mTextArea.setPreferredSize(new Dimension(200,200));
-		mContent.add(mTextArea);
+		mContent.add(mTextArea, BorderLayout.CENTER);
+		
+		if(mClient.isAdmin())
+		{
+			JPanel mAdminButtonPanel = new JPanel();
+			
+			mStartGame = new JButton(TOKEN_START_GAME_BUTTON_TEXT);
+			mStartGame.setActionCommand(ACTION_START_GAME);
+			mStartGame.addActionListener(this);
+			
+			mAdminButtonPanel.add(mStartGame);
+			mContent.add(mAdminButtonPanel, BorderLayout.SOUTH);
+		}
 		
 		this.setContentPane(mContent);
 
@@ -55,6 +84,21 @@ public class DominionClientWindow extends JFrame{
 		{
 			mTextArea.append(aMessage);
 			mTextArea.append("\n");
+		}
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent arg0) {
+		if (arg0.getActionCommand().equals(ACTION_START_GAME))
+		{
+			try {
+				mClient.sendMessage(DominionClientProtocol.createStartGameMessage(mClient.getPlayerID()));
+			} catch (IOException e) {
+				mLog.error("Failed to start game - " + e.getMessage());
+				displayMessage(TOKEN_START_GAME_FAILED);
+			}
+			mStartGame.setEnabled(false);
+			mStartGame.setText(TOKEN_STARTING_BUTTON_TEXT);
 		}
 	}
 }
