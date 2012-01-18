@@ -36,16 +36,23 @@ public class HostOrJoinWindow extends JFrame implements ActionListener{
 	 */
 	private static final long serialVersionUID = 1L;
 	
-	private static final String TOKEN_TITLE = "JDominion";
-	private static final String TOKEN_INVALID_PORT = "The port was invalid. \nValid ports are between 1024 and 65535.";
-	
+	public static final String TOKEN_TITLE = "JDominion";
+	public static final String TOKEN_HOST = "Host";
+	public static final String TOKEN_JOIN = "Join";
+	public static final String TOKEN_NAME = "Name";
+	public static final String TOKEN_IP_ADDRESS = "IP Address";
+	public static final String TOKEN_PORT = "Port";
+	public static final String TOKEN_INVALID_PORT = "The port was invalid. \nValid ports are between 1024 and 65535.";
+	public static final String TOKEN_NO_NAME = "You must enter a name";
 	private static final String ACTION_JOIN = "JOIN";
 	private static final String ACTION_HOST = "HOST";
 	
-	private JButton mBHost = new JButton("Host");
-	private JButton mBJoin = new JButton("Join");
-	private JLabel mLIPAddr = new JLabel("IP Address");
-	private JLabel mLPort = new JLabel("Port");
+	private JButton mBHost = new JButton(TOKEN_HOST);
+	private JButton mBJoin = new JButton(TOKEN_JOIN);
+	private JLabel mLName = new JLabel(TOKEN_NAME);
+	private JLabel mLIPAddr = new JLabel(TOKEN_IP_ADDRESS);
+	private JLabel mLPort = new JLabel(TOKEN_PORT);
+	private JTextField mTFName = new JTextField();
 	private JTextField mTFIPAddr = new JTextField();
 	private JTextField mTFPort = new JTextField();
 	private static final int WINDOW_DEFAULT_WIDTH = 200;
@@ -62,7 +69,18 @@ public class HostOrJoinWindow extends JFrame implements ActionListener{
 	public HostOrJoinWindow()
 	{
 		this.setTitle(TOKEN_TITLE);
-		JPanel content = new JPanel(new BorderLayout());
+		this.setPreferredSize(new Dimension(WINDOW_DEFAULT_WIDTH,WINDOW_DEFAULT_HEIGHT));
+		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		this.setLocationRelativeTo(null);
+		initComponents();
+		this.pack();
+		mTFName.requestFocusInWindow();
+		this.setVisible(true);
+	}
+
+	private void initComponents()
+	{
+		JPanel lContent = new JPanel(new BorderLayout());
 		
 		mBHost.setActionCommand(ACTION_HOST);
 		mBHost.addActionListener(this);
@@ -74,27 +92,20 @@ public class HostOrJoinWindow extends JFrame implements ActionListener{
 		lBPanel.add(mBJoin);
 		lBPanel.setPreferredSize(new Dimension(100,50));
 		
-		JPanel lIPanel = new JPanel(new GridLayout(2,2,0,10));
+		JPanel lIPanel = new JPanel(new GridLayout(3,2,0,10));
+		lIPanel.add(mLName);
+		lIPanel.add(mTFName);
 		lIPanel.add(mLIPAddr);
 		lIPanel.add(mTFIPAddr);
 		lIPanel.add(mLPort);
 		lIPanel.add(mTFPort);
 		lIPanel.setBorder(BorderFactory.createEmptyBorder(0,0,20,0)); //pad the bottom
-		lIPanel.setPreferredSize(new Dimension(200,75));
-		content.add(lBPanel, BorderLayout.NORTH);
-		content.add(lIPanel, BorderLayout.SOUTH);
+		lIPanel.setPreferredSize(new Dimension(200,100));
+		lContent.add(lBPanel, BorderLayout.NORTH);
+		lContent.add(lIPanel, BorderLayout.SOUTH);
 
-		this.setContentPane(content);
-		this.setPreferredSize(new Dimension(WINDOW_DEFAULT_WIDTH,WINDOW_DEFAULT_HEIGHT));
-		this.setLocation(
-				Toolkit.getDefaultToolkit().getScreenSize().width / 2 - (WINDOW_DEFAULT_WIDTH / 2),
-				Toolkit.getDefaultToolkit().getScreenSize().height / 2 - (WINDOW_DEFAULT_HEIGHT / 2));
-		this.pack();
-		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		mTFIPAddr.requestFocusInWindow();
-		this.setVisible(true);
+		this.setContentPane(lContent);
 	}
-
 	/**
 	 * Creates a server using the specified port as the Server Port
 	 * @param aPort The port to accept connections on
@@ -115,15 +126,16 @@ public class HostOrJoinWindow extends JFrame implements ActionListener{
 	/**
 	 * Creates a client which will attempt to connect to the server at the specified IP and port.
 	 * 
+	 * @param aName The name to be displayed for this client
 	 * @param aIPAddress The IP address/Hostname of the server to connect to
 	 * @param aPort The port the server is listening on
 	 * @param aIsAdmin Whether this client is an admin for the game or not
 	 * @return <code>TURE</code> if the client successfully connected to the server, <code>FALSE</code> if not
 	 */
-	private boolean createClient(String aIPAddress, int aPort, boolean aIsAdmin)
+	private boolean createClient(String aName, String aIPAddress, int aPort, boolean aIsAdmin)
 	{
 		try {
-			new DominionClient(aPort, aIPAddress, new DominionClientProtocol(), aIsAdmin);
+			new DominionClient(aPort, aIPAddress, new DominionClientProtocol(), aIsAdmin, aName);
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 			return false;
@@ -150,9 +162,15 @@ public class HostOrJoinWindow extends JFrame implements ActionListener{
 				mTFPort.selectAll();
 				return;
 			}
+			String lName = mTFName.getText();
+			if(lName.equals(""))
+			{
+				JOptionPane.showMessageDialog(this, TOKEN_NO_NAME, getTitle(), JOptionPane.ERROR_MESSAGE);
+				mTFName.requestFocusInWindow();
+			}
 			if(createServer(lPort))
 			{ //We successfully created the server, now create the client for this user
-				createClient("localhost", lPort, true); //This user created the game so is an admin
+				createClient(lName, "localhost", lPort, true); //This user created the game so is an admin
 				this.dispose(); //We have the server and client set up so we're all done here
 			}
 		}
@@ -168,9 +186,17 @@ public class HostOrJoinWindow extends JFrame implements ActionListener{
 				//Let the user know the port was invalid
 				return;
 			}
-			if(createClient(mTFIPAddr.getText(), lPort, false))
+			String lName = mTFName.getText();
+			if(lName.equals(""))
+			{
+				JOptionPane.showMessageDialog(this, TOKEN_NO_NAME, getTitle(), JOptionPane.ERROR_MESSAGE);
+				mTFName.requestFocusInWindow();
+			}
+			
+			if(createClient(lName, mTFIPAddr.getText(), lPort, false))
 			{ //The client was successfully created, we can dispose of this window now
-				this.dispose();
+				//this.dispose();
+				this.setEnabled(false);
 			}
 		}
 		

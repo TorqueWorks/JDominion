@@ -151,8 +151,8 @@ public class DominionClientProtocol implements SocketCallback{
 			int lPlayerID = Integer.parseInt(aTokens[1]);
 			if(lPlayerID >= 0) //A -1 is returned if there was an error
 			{
+				mClient.setID(lPlayerID);
 				mClient.displayMessage(TOKEN_JOIN_GAME_SUCCESS);
-				mClient.setPlayerID(lPlayerID);
 			}
 			else
 			{

@@ -10,10 +10,10 @@ import dominion.server.DominionServer;
 
 public class DominionPlayer {
 
-	private final String mName;
-	private final int mID;
-	private final DominionGame mGame;
-	private final boolean mIsAdmin;
+	private String mName;
+	private int mID;
+	private DominionGame mGame;
+	private boolean mIsAdmin;
 	
 	private final List<Card> mDeck = new LinkedList<Card>();
 	private final List<Card> mDiscard = new LinkedList<Card>();
@@ -28,7 +28,7 @@ public class DominionPlayer {
 	 * @param aIsAdmin Whether this player is an admin or not
 	 * @param aGame The game this player is playing in
 	 */
-	protected DominionPlayer(String aName, int aID, boolean aIsAdmin, DominionGame aGame)
+	public DominionPlayer(String aName, int aID, boolean aIsAdmin, DominionGame aGame)
 	{
 		mName = aName;
 		mID = aID;
@@ -36,7 +36,12 @@ public class DominionPlayer {
 		mIsAdmin = aIsAdmin;
 	}
 	
-	protected boolean isAdmin() {
+	public void setID(int aID)
+	{
+		mID = aID;
+	}
+	
+	public boolean isAdmin() {
 		return mIsAdmin;
 	}
 

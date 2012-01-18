@@ -149,7 +149,6 @@ public class DominionServerProtocol implements SocketCallback{
 	{
 		mLog.debug("Process Join Game Message");
 		int lPlayerID = -1;
-		
 		if(aTokens.length == DominionClientProtocol.JOIN_GAME_MSG_NUM_FIELDS)
 		{ //Only process the message if it has the right number of tokens...
 			boolean lIsAdmin = Boolean.parseBoolean(aTokens[2]);

@@ -1,17 +1,27 @@
 package dominion.client;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 
 import org.apache.log4j.Logger;
+
+import torque.graphics.ImageLibrary;
 
 public class DominionClientWindow extends JFrame implements ActionListener{
 
@@ -21,9 +31,14 @@ public class DominionClientWindow extends JFrame implements ActionListener{
 	
 	private JTextArea mTextArea;
 	//Localization tokens
-	private static final String TOKEN_START_GAME_BUTTON_TEXT = "Start Game";
-	private static final String TOKEN_STARTING_BUTTON_TEXT = "Starting...";
-	private static final String TOKEN_START_GAME_FAILED = "Failed to start game";
+	public static final String TOKEN_START_GAME_BUTTON_TEXT = "Start Game";
+	public static final String TOKEN_STARTING_BUTTON_TEXT = "Starting...";
+	public static final String TOKEN_START_GAME_FAILED = "Failed to start game";
+	public static final String TOKEN_JOINING_GAME = "Joining game...";
+
+	private static final int CARD_COLUMNS = 2;
+	private static final int CARD_ROWS = 5;
+	
 	//Actions
 	private static final String ACTION_START_GAME = "START";
 	
@@ -36,8 +51,10 @@ public class DominionClientWindow extends JFrame implements ActionListener{
 	public DominionClientWindow(DominionClient aClient)
 	{
 		mClient = aClient;
+		loadImages();
 		initComponents();
 		this.setTitle("Dominion Client");
+		this.setPreferredSize(new Dimension(1000, 750));
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.pack();
 		this.setLocationRelativeTo(null);
@@ -45,15 +62,56 @@ public class DominionClientWindow extends JFrame implements ActionListener{
 	}
 	
 	/**
+	 * Starts a thread to load the image files then returns. Note this means that the images will not immediately
+	 * be available upon return from this method.
+	 */
+	private void loadImages()
+	{
+		ImageLoader lLoader = new ImageLoader();
+		lLoader.start();
+		try {
+			//TODO: Temp, let the images load...
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	/**
 	 * Creates and initializes the various components of the GUI.
 	 */
 	private void initComponents()
 	{
-		mContent = new JPanel(new BorderLayout());
+		mContent = new JPanel(new GridBagLayout());
+
+		GridBagConstraints c = new GridBagConstraints();
+		c.anchor = GridBagConstraints.PAGE_START; //Anchors it to top of page
+		c.fill = GridBagConstraints.NONE; //Don't fill out the components
+		c.insets = new Insets(5,5,5,5); //Give each component 5px buffer on each side
+		c.weightx = 1.0; //Causes the extra x space to be distributed evenly among all components
 		
+		for(int lColumn = 0; lColumn < CARD_COLUMNS; lColumn++)
+		{
+			c.gridy = lColumn;
+			for(int lRow = 0; lRow < CARD_ROWS; lRow++)
+			{
+				c.gridx = lRow;
+				mContent.add(new CardChoicePanel(),c);
+			}
+		}
+		
+		c.fill = GridBagConstraints.BOTH;
+		c.gridy = GridBagConstraints.RELATIVE; //Each component is put at grid y of previous component + 1
+		c.gridx = 0; //Start each component on a new row(each component has a grid x value of 0)
+		c.gridwidth = GridBagConstraints.REMAINDER;
+		c.insets = new Insets(0,0,0,0);
+	
+		c.weighty = 1.0;
+		c.weightx = 1.0;
 		mTextArea = new JTextArea();
-		mTextArea.setPreferredSize(new Dimension(200,200));
-		mContent.add(mTextArea, BorderLayout.CENTER);
+		//mTextArea.setPreferredSize(new Dimension(200,200));
+		mContent.add(mTextArea,c);
 		
 		if(mClient.isAdmin())
 		{
@@ -62,11 +120,13 @@ public class DominionClientWindow extends JFrame implements ActionListener{
 			mStartGame = new JButton(TOKEN_START_GAME_BUTTON_TEXT);
 			mStartGame.setActionCommand(ACTION_START_GAME);
 			mStartGame.addActionListener(this);
-			
 			mAdminButtonPanel.add(mStartGame);
-			mContent.add(mAdminButtonPanel, BorderLayout.SOUTH);
+			
+			c.anchor = GridBagConstraints.PAGE_END;
+			c.fill = GridBagConstraints.NONE;
+			c.weighty = 0.0;
+			mContent.add(mAdminButtonPanel,c);
 		}
-		
 		this.setContentPane(mContent);
 
 		
@@ -92,13 +152,52 @@ public class DominionClientWindow extends JFrame implements ActionListener{
 		if (arg0.getActionCommand().equals(ACTION_START_GAME))
 		{
 			try {
-				mClient.sendMessage(DominionClientProtocol.createStartGameMessage(mClient.getPlayerID()));
+				mClient.sendMessage(DominionClientProtocol.createStartGameMessage(mClient.getID()));
 			} catch (IOException e) {
 				mLog.error("Failed to start game - " + e.getMessage());
 				displayMessage(TOKEN_START_GAME_FAILED);
 			}
+			this.setEnabled(false);
 			mStartGame.setEnabled(false);
 			mStartGame.setText(TOKEN_STARTING_BUTTON_TEXT);
+		}
+	}
+	
+	private class ImageLoader extends Thread
+	{
+		public ImageLoader()
+		{
+			
+		}
+		
+		@Override
+		public void run()
+		{
+			ImageLibrary.loadImage("adventurer", "images/Adventurer.bmp");
+			ImageLibrary.loadImage("bureaucrat", "images/Bureaucrat.bmp");
+			ImageLibrary.loadImage("cellar", "images/Cellar.bmp");
+			ImageLibrary.loadImage("chancellor", "images/Chancellor.bmp");
+			ImageLibrary.loadImage("chapel", "images/Chapel.bmp");
+			ImageLibrary.loadImage("council_room", "images/Council_Room.bmp");
+			ImageLibrary.loadImage("feast", "images/Feast.bmp");
+			ImageLibrary.loadImage("festival", "images/Festival.bmp");
+			ImageLibrary.loadImage("gardens", "images/Gardens.bmp");
+			ImageLibrary.loadImage("laboratory", "images/Laboratory.bmp");
+			ImageLibrary.loadImage("library", "images/Library.bmp");
+			ImageLibrary.loadImage("market", "images/Market.bmp");
+			ImageLibrary.loadImage("militia", "images/Militia.bmp");
+			ImageLibrary.loadImage("mine", "images/Mine.bmp");
+			ImageLibrary.loadImage("moat", "images/Moat.bmp");
+			ImageLibrary.loadImage("moneylender", "images/Moneylender.bmp");
+			ImageLibrary.loadImage("remodel", "images/Remodel.bmp");
+			ImageLibrary.loadImage("smithy", "images/Smithy.bmp");
+			ImageLibrary.loadImage("spy","images/Spy.bmp");
+			ImageLibrary.loadImage("thief", "images/Thief.bmp");
+			ImageLibrary.loadImage("throne_room", "images/Throne_Room.bmp");
+			ImageLibrary.loadImage("village", "images/Village.bmp");
+			ImageLibrary.loadImage("witch", "images/Witch.bmp");
+			ImageLibrary.loadImage("woodcutter","images/Woodcutter.bmp");
+			ImageLibrary.loadImage("workshop", "images/Workshop.bmp");
 		}
 	}
 }

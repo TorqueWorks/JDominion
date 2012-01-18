@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 
+import org.apache.log4j.Logger;
+
 import dominion.game.DominionException;
 import dominion.game.DominionGame;
 import dominion.game.DominionPlayer;
@@ -13,30 +15,44 @@ import torque.sockets.SocketCallback;
 
 public class DominionClient extends TorqueNetworkClient{
 
-	private DominionGame mGame = new DominionGame();
-	
-	private boolean mIsAdmin = false;
-	private int mPlayerID = -1;
+	private final DominionGame mGame = new DominionGame();
+	private DominionPlayer mMe;
 	
 	private DominionClientWindow mWindow;
+	
+	private static final Logger mLog = Logger.getLogger(DominionClient.class.getName());
 	
 	/**
 	 * A client for the JDominion game. This client connects to a JDominion server and provides a GUI to interact with the game.
 	 * @param aPort The port the server is listening on
 	 * @param aIPAddress The IPAddress/Hostname of the server to connect to
 	 * @param aProtocol The protocol used to handle incoming messages
+	 * @param aIsAdmin Whether this client is an admin client or not
+	 * @param aName The name displayed for this client
 	 * @throws UnknownHostException Indicates that the IPAddress/Hostname could not be resolved
 	 * @throws IOException If a general I/O error occurred while connecting to the server
 	 */
-	public DominionClient(int aPort, String aIPAddress, DominionClientProtocol aProtocol, boolean aIsAdmin)
+	public DominionClient(int aPort, String aIPAddress, DominionClientProtocol aProtocol, boolean aIsAdmin, String aName)
 			throws UnknownHostException, IOException {
 		super(aPort, aIPAddress, aProtocol);
-		mIsAdmin = aIsAdmin;
 		aProtocol.setClient(this);
-		this.sendMessage(DominionClientProtocol.createJoinGameMessage("zomg", aIsAdmin));
+		mMe = new DominionPlayer(aName, -1, aIsAdmin, mGame);
 		mWindow = new DominionClientWindow(this);
+		mWindow.displayMessage(DominionClientWindow.TOKEN_JOINING_GAME);
+		this.sendMessage(DominionClientProtocol.createJoinGameMessage(aName, aIsAdmin));
 	}
 	
+
+	/**
+	 * Sets the ID for this client
+	 * 
+	 * @param aID
+	 */
+	protected void setID(int aID)
+	{
+		mLog.debug("Setting ID for client - " + aID);
+		mMe.setID(aID);
+	}
 	/**
 	 * Returns whether this client is an admin or not
 	 * 
@@ -44,18 +60,18 @@ public class DominionClient extends TorqueNetworkClient{
 	 */
 	protected boolean isAdmin()
 	{
-		return mIsAdmin;
+		return mMe.isAdmin();
 	}
 	
-	protected int getPlayerID()
+	/**
+	 * Gets the game-unique player ID for this client
+	 * @return
+	 */
+	protected int getID()
 	{
-		return mPlayerID;
+		return mMe.getID();
 	}
 	
-	protected void setPlayerID(int aPlayerID)
-	{
-		mPlayerID = aPlayerID;
-	}
 	/**
 	 * Adds a player with the specified ID to the game. 
 	 * 
