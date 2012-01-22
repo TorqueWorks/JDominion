@@ -107,7 +107,7 @@ public class DominionClientWindow extends JFrame implements ActionListener{
 			for(int lColumn = 0; lColumn < CARD_COLUMNS; lColumn++)
 			{
 				c.gridx = lColumn;
-				CardChoicePanel lCCP = new CardChoicePanel((lRow * CARD_ROWS) + lColumn, mClient);
+				CardChoicePanel lCCP = new CardChoicePanel((lRow * CARD_COLUMNS) + lColumn, mClient);
 				mContent.add(lCCP,c);
 				mCardChoicePanels.add(lCCP);
 			}
