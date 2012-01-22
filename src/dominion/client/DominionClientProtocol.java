@@ -5,6 +5,7 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 
+import dominion.game.Card;
 import dominion.game.Cards;
 import dominion.game.DominionException;
 import dominion.game.DominionPlayer;
@@ -23,10 +24,12 @@ public class DominionClientProtocol implements SocketCallback{
 	//Message IDs
 	public static final String JOIN_GAME_MSG = "JOINGAME";
 	public static final String START_GAME_MSG = "STARTGAME";
-	
+	public static final String CHOOSE_CARD_MSG = "CHOOSECARD";
 	//Message field count
 	public static final int JOIN_GAME_MSG_NUM_FIELDS = 3;
 	public static final int START_GAME_MSG_NUM_FIELDS = 2;
+	public static final int CHOOSE_CARD_MSG_NUM_FIELDS = 3;
+	
 	//Localization tokens
 	private static final String TOKEN_JOIN_GAME_SUCCESS = "Successfully joined game!";
 	private static final String TOKEN_JOIN_GAME_FAILURE = "Failed to join game.";
@@ -54,21 +57,32 @@ public class DominionClientProtocol implements SocketCallback{
 			mLog.error("Received message with invalid number of fields - " + aMessage);
 			return;
 		}
-		if(lTokens[0].equals(DominionServerProtocol.NEW_PLAYER_MSG))
+		try
 		{
-			processNewPlayerMessage(lTokens, aReceiver);
+			if(lTokens[0].equals(DominionServerProtocol.NEW_PLAYER_MSG))
+			{
+				processNewPlayerMessage(lTokens, aReceiver);
+			}
+			else if (lTokens[0].equals(DominionServerProtocol.JOIN_GAME_RESP_MSG))
+			{
+				processJoinGameRespMessage(lTokens, aReceiver);
+			}
+			else if(lTokens[0].equals(DominionServerProtocol.INIT_GAME_MSG))
+			{
+				processInitGameMessage(lTokens);
+			}
+			else if (lTokens[0].equals(DominionServerProtocol.CARD_CHOSEN_MSG))
+			{
+				processCardChosenMessage(lTokens);
+			}
+			else
+			{
+				mLog.debug("Unknown message received - " + aMessage);
+			}
 		}
-		else if (lTokens[0].equals(DominionServerProtocol.JOIN_GAME_RESP_MSG))
+		catch(Exception e)
 		{
-			processJoinGameRespMessage(lTokens, aReceiver);
-		}
-		else if(lTokens[0].equals(DominionServerProtocol.INIT_GAME_MSG))
-		{
-			processInitGameMessage(lTokens);
-		}
-		else
-		{
-			mLog.debug("Unknown message received - " + aMessage);
+			mLog.error("Error processing message (" + aMessage + ") - " + e.getMessage());
 		}
 	}
 
@@ -107,6 +121,29 @@ public class DominionClientProtocol implements SocketCallback{
 		StringBuilder lMessage = new StringBuilder(START_GAME_MSG);
 		lMessage.append(CLIENT_MSG_DELIM);
 		lMessage.append(aPlayerID);
+		return lMessage.toString();
+	}
+	
+	/**
+	 * Creates a CHOOSE CARD message which is used to tell the server that a client has
+	 * chosen a card to use in the pool.
+	 * <ol>
+	 * 		<li>Message ID - The CHOOSE_CARD_MSG identifier</li>
+	 * 		<li>Index - The slot index for this card</li>
+	 * 		<li>CardID - The ID of the card being chosen</li>
+	 * </ol>
+	 * 
+	 * @param aIndex Slot index in the card pool
+	 * @param aCardID ID of the card being chosen
+	 * @return The complete CHOOSE CARD message as a string
+	 */
+	public static String createChooseCardMessage(int aIndex, int aCardID)
+	{
+		StringBuilder lMessage = new StringBuilder(CHOOSE_CARD_MSG);
+		lMessage.append(CLIENT_MSG_DELIM);
+		lMessage.append(aIndex);
+		lMessage.append(CLIENT_MSG_DELIM);
+		lMessage.append(aCardID);
 		return lMessage.toString();
 	}
 	/**
@@ -187,6 +224,25 @@ public class DominionClientProtocol implements SocketCallback{
 				mLog.debug("Got " + lNum + "of starting card " + Cards.mCards.get(lCardID).getPrintName());
 			}
 			mClient.displayMessage(TOKEN_GAME_START);
+		}
+	}
+	
+	/**
+	 * Process a received CARD CHOSEN message. This message tells the client that a new card has been chosen for the
+	 * pool during the setup phase.
+	 * 
+	 * @param aTokens The tokens from the body of the message
+	 * @throws DominionException 
+	 * @throws NumberFormatException 
+	 */
+	private void processCardChosenMessage(String[] aTokens) throws NumberFormatException, DominionException
+	{
+		mLog.debug("Process Card Chosen message");
+		if(aTokens.length == DominionServerProtocol.CARD_CHOSEN_NUM_FIELDS)
+		{
+			int lIndex = Integer.parseInt(aTokens[1]);
+			Card lCard = Cards.getCardByID(Integer.parseInt(aTokens[2]));
+			mClient.addCardToPool(lIndex, lCard, 10); //TODO: Don't hardcode number here
 		}
 	}
 }

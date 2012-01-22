@@ -8,13 +8,13 @@ import org.apache.log4j.Logger;
 public class DominionGame {
 
 	public static final int MAX_PLAYERS = 5;
+	public static final int MAX_CARD_STACKS = 10;
 	
 	//Use a simple array here since I want to always keep the space reserved for the players (just set empty spots to null)
 	//and since the PlayerID is the index in the array we want to make sure that will never change (which the list data structures
 	//don't ensure)
 	private DominionPlayer[] mPlayers = new DominionPlayer[MAX_PLAYERS];
-	
-	private Map<Card, Integer> mCardPool = new HashMap<Card, Integer>();
+	private CardStack[] mCardPool = new CardStack[MAX_CARD_STACKS];
 	
 	private Logger mLog = Logger.getLogger(DominionGame.class.getName());
 	
@@ -75,48 +75,45 @@ public class DominionGame {
 	 * Adds a card to the pool of available cards. If the card already exists in the pool the number of cards
 	 * is instead added to the current number of cards of this type.
 	 * 
+	 * This will overwrite any cards currently in the slot indicated by index, replacing them with the new card.
+	 * 
+	 * @param aIndex The index in the pool to add the card at
 	 * @param aCardID The ID of the card to add, see {@link Cards} for card definitions
 	 * @param aTotal The number of this card available in the pool
 	 * @throws DominionException 
 	 */
-	public void addCardToPool(Card aCard, int aTotal) throws DominionException
+	public void addCardToPool(int aIndex, Card aCard, int aTotal) throws DominionException
 	{
 		if(aCard == null) throw new DominionException("DominionGame::addCardToPool", "Card was null");
-		
-		mLog.debug("Adding " + aTotal + " of Card " + aCard.getPrintName() + " to pool");
-		if(mCardPool.containsKey(aCard))
-		{ //We already have copies of this card, just add these ones to the pool
-			mCardPool.put(aCard, mCardPool.get(aCard) + aTotal);
-		}
-		else
-		{
-			mCardPool.put(aCard, aTotal);
-		}
+		if(aIndex < 0 || aIndex >= mCardPool.length) throw new DominionException("DominionGame::addCardToPool", "Index out of bounds");
+		mLog.debug("Adding " + aTotal + " of Card " + aCard.getPrintName() + " to pool at index " + aIndex);
+		mCardPool[aIndex] = new CardStack(aCard, aTotal);
 	}
 	
 	/**
 	 * Attempts to give a card from the card pool to the specified player. These must all hold true for the player to receive the card:
 	 * <ul>
 	 * <li>The PlayerID must be valid</li>
-	 * <li>The Card must exist in this game</li>
+	 * <li>The index must be valid</li>
 	 * <li>The pile for this card must not be empty</li>
 	 * </ul>
 	 * 
-	 * @param aCard The card to give to the player
+	 * @param aCard The index in the pool of the card to give to the player
 	 * @param aPlayerID The ID of the player to receive the card
 	 * @throws DominionException If an error occurred which prevented the player from receiving the card
 	 */
-	public void giveCardToPlayer(Card aCard, int aPlayerID) throws DominionException
+	public void giveCardToPlayer(int aIndex, int aPlayerID) throws DominionException
 	{
-		mLog.debug("Giving Card " + aCard.getPrintName() + " to Player " + aPlayerID);
-		if(aPlayerID < 0 || aPlayerID >= MAX_PLAYERS) throw new DominionException("DominionGame::giveCardToPlayer","Invalid player ID");
-		if(mCardPool.get(aCard) == null) throw new DominionException("DominionGame::giveCardToPlayer","Card does not exist in this game");
-		if(mCardPool.get(aCard).equals(0)) throw new DominionException("DominionGame::giveCardToPlayer","Card pile is empty");
+		mLog.debug("Giving Card at index " + aIndex + " to Player " + aPlayerID);
+		if(aPlayerID < 0 || aPlayerID >= mPlayers.length) throw new DominionException("DominionGame::giveCardToPlayer","Invalid player ID");
+		
+		if(aIndex < 0 || aIndex >= mCardPool.length) throw new DominionException("DominionGame::giveCardToPlayer","Invalid index");
+		if(mCardPool[aIndex].getTotal() == 0) throw new DominionException("DominionGame::giveCardToPlayer","Card pile is empty");
 		
 		DominionPlayer lPlayer = mPlayers[aPlayerID];
 		if(lPlayer == null) throw new DominionException("DominionGame::giveCardToPlayer", "Player does not exist");
-		lPlayer.addCardToDiscardPile(aCard);
-		mCardPool.put(aCard, mCardPool.get(aCard) - 1);
+		lPlayer.addCardToDiscardPile(mCardPool[aIndex].getCard());
+		mCardPool[aIndex].alterTotal(-1); //subtract a card from the pile
 		
 	}
 	
@@ -136,10 +133,47 @@ public class DominionGame {
 	 * Returns a mapping of all the cards in this pool along with the number of that card left in the pool.
 	 * @return
 	 */
-	public HashMap<Card,Integer> getCardsInPool()
+	public CardStack[] getCardsInPool()
 	{
-		HashMap<Card,Integer> lRet = new HashMap<Card,Integer>();
-		lRet.putAll(mCardPool);
-		return lRet;
+		return mCardPool;
+	}
+	
+	public class CardStack
+	{
+		private final Card mCard;
+		private int mTotal;
+		
+		public CardStack(Card aCard, int aTotal)
+		{
+			mCard = aCard;
+			mTotal = aTotal;
+		}
+		
+		/**
+		 * Gets the card this stack contains
+		 * @return
+		 */
+		public Card getCard()
+		{
+			return mCard;
+		}
+		
+		/**
+		 * Gets the total number of this card left in the stack
+		 * @return
+		 */
+		public int getTotal()
+		{
+			return mTotal;
+		}
+		
+		/**
+		 * Adds the difference to the total. Subtract cards by passing a negative number.
+		 * @param aDiff
+		 */
+		protected void alterTotal(int aDiff)
+		{
+			mTotal += aDiff;
+		}
 	}
 }

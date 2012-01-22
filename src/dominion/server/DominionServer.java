@@ -44,12 +44,14 @@ public class DominionServer extends TorqueNetworkServer{
 	 */
 	private void initGame()
 	{
+		/** TODO: Figure out what to do for this
 		addCardToPool(Cards.mCards.get(0), 30); //Copper
 		addCardToPool(Cards.mCards.get(1), 30); //Silver
 		addCardToPool(Cards.mCards.get(2), 20); //Gold
 		addCardToPool(Cards.mCards.get(3), 20); //Estate
 		addCardToPool(Cards.mCards.get(4), 20); //Duchy
 		addCardToPool(Cards.mCards.get(5), 10); //Province
+		**/
 	}
 
 	/**
@@ -58,12 +60,17 @@ public class DominionServer extends TorqueNetworkServer{
 	 * @param aCard The Card we want to add to the pool
 	 * @param aTotal
 	 */
-	private void addCardToPool(Card aCard, int aTotal)
+	protected void addCardToPool(int aIndex, Card aCard, int aTotal)
 	{
 		try {
-			mGame.addCardToPool(aCard, aTotal);
+			mGame.addCardToPool(aIndex, aCard, aTotal);
 		} catch (DominionException e) {
 			return;
+		}
+		try {
+			this.sendMessage(DominionServerProtocol.createCardChosenMessage(aIndex, aCard.getID()));
+		} catch (IOException e) {
+			mLog.error(e.getMessage());
 		}
 	}
 	/**
@@ -115,7 +122,7 @@ public class DominionServer extends TorqueNetworkServer{
 		for(int i = 0; i < 10; i++)
 		{
 			try {
-				mGame.addCardToPool(Cards.mCards.get(i + 6), 10);
+				mGame.addCardToPool(i, Cards.mCards.get(i + 6), 10);
 			
 			} catch (DominionException e) {
 				mLog.error(e.getMessage());

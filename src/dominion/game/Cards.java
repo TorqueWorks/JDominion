@@ -6,7 +6,7 @@ import java.util.List;
 
 import dominion.game.Card.CARD_TYPE;
 
-public interface Cards {
+public final class Cards {
 
 	/**
 	 * Array of card objects. This is the only place they're defined, everywhere else uses the ID of the card and then references this
@@ -48,4 +48,22 @@ public interface Cards {
 		new Card("Woodcutter", 3, new CARD_TYPE[]{CARD_TYPE.ACTION}, null, null, 29),
 		new Card("Workshop", 3, new CARD_TYPE[]{CARD_TYPE.ACTION}, null, null, 30)
 		));
+	
+	/**
+	 * Gets the card with the specified ID. 
+	 * @param aID
+	 * @return
+	 * @throws IndexOutOfBoundsException
+	 */
+	public static Card getCardByID(int aID) throws DominionException
+	{
+		try
+		{
+			return mCards.get(aID);
+		}
+		catch(IndexOutOfBoundsException e)
+		{
+			throw new DominionException("Cards::getCardByID", "Invalid ID");
+		}
+	}
 }

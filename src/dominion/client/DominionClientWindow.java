@@ -10,6 +10,8 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
@@ -17,9 +19,12 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
 import org.apache.log4j.Logger;
+
+import dominion.game.DominionGame.CardStack;
 
 import torque.graphics.ImageLibrary;
 
@@ -28,6 +33,7 @@ public class DominionClientWindow extends JFrame implements ActionListener{
 	private DominionClient mClient;
 	private JPanel mContent, mAdminButtonPanel;
 	private JButton mStartGame;
+	private List<CardChoicePanel> mCardChoicePanels = new ArrayList<CardChoicePanel>();
 	
 	private JTextArea mTextArea;
 	//Localization tokens
@@ -36,8 +42,8 @@ public class DominionClientWindow extends JFrame implements ActionListener{
 	public static final String TOKEN_START_GAME_FAILED = "Failed to start game";
 	public static final String TOKEN_JOINING_GAME = "Joining game...";
 
-	private static final int CARD_COLUMNS = 2;
-	private static final int CARD_ROWS = 5;
+	private static final int CARD_COLUMNS = 5;
+	private static final int CARD_ROWS = 2;
 	
 	//Actions
 	private static final String ACTION_START_GAME = "START";
@@ -84,6 +90,10 @@ public class DominionClientWindow extends JFrame implements ActionListener{
 	private void initComponents()
 	{
 		mContent = new JPanel(new GridBagLayout());
+		JScrollPane lContentScrollPane = new JScrollPane(mContent);
+
+		lContentScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		lContentScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
 		GridBagConstraints c = new GridBagConstraints();
 		c.anchor = GridBagConstraints.PAGE_START; //Anchors it to top of page
@@ -91,13 +101,15 @@ public class DominionClientWindow extends JFrame implements ActionListener{
 		c.insets = new Insets(5,5,5,5); //Give each component 5px buffer on each side
 		c.weightx = 1.0; //Causes the extra x space to be distributed evenly among all components
 		
-		for(int lColumn = 0; lColumn < CARD_COLUMNS; lColumn++)
+		for(int lRow = 0; lRow < CARD_ROWS; lRow++)
 		{
-			c.gridy = lColumn;
-			for(int lRow = 0; lRow < CARD_ROWS; lRow++)
+			c.gridy = lRow;
+			for(int lColumn = 0; lColumn < CARD_COLUMNS; lColumn++)
 			{
-				c.gridx = lRow;
-				mContent.add(new CardChoicePanel(),c);
+				c.gridx = lColumn;
+				CardChoicePanel lCCP = new CardChoicePanel((lRow * CARD_ROWS) + lColumn, mClient);
+				mContent.add(lCCP,c);
+				mCardChoicePanels.add(lCCP);
 			}
 		}
 		
@@ -127,7 +139,7 @@ public class DominionClientWindow extends JFrame implements ActionListener{
 			c.weighty = 0.0;
 			mContent.add(mAdminButtonPanel,c);
 		}
-		this.setContentPane(mContent);
+		this.setContentPane(lContentScrollPane);
 
 		
 	}
@@ -163,12 +175,23 @@ public class DominionClientWindow extends JFrame implements ActionListener{
 		}
 	}
 	
+	public void refreshCardPool()
+	{
+		CardStack[] lCardPool = mClient.getCardsInPool();
+		for(int i = 0; i < lCardPool.length && i < mCardChoicePanels.size(); ++i)
+		{
+			CardStack lCS = lCardPool[i];
+			if(lCS == null) continue;
+			mCardChoicePanels.get(i).setSelectedValue(lCS.getCard());
+		}
+	}
+	/**
+	 * Simple thread class to load all the images for the client UI
+	 * @author gagnoncl
+	 *
+	 */
 	private class ImageLoader extends Thread
 	{
-		public ImageLoader()
-		{
-			
-		}
 		
 		@Override
 		public void run()

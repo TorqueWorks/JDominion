@@ -6,9 +6,11 @@ import java.util.HashMap;
 
 import org.apache.log4j.Logger;
 
+import dominion.game.Card;
 import dominion.game.DominionException;
 import dominion.game.DominionGame;
 import dominion.game.DominionPlayer;
+import dominion.game.DominionGame.CardStack;
 
 import torque.client.TorqueNetworkClient;
 import torque.sockets.SocketCallback;
@@ -85,6 +87,30 @@ public class DominionClient extends TorqueNetworkClient{
 		mWindow.displayMessage("Player " + aName + " has joined!");
 	}
 	
+	/**
+	 * Adds a new card to the pool of available cards for this game. Updates the UI to display the new card
+	 * as well.
+	 * 
+	 * @param aIndex The index of the pool to add the card at
+	 * @param aCard The card to add to the pool
+	 * @param aTotal The amount of this card to add to the pool
+	 * @throws DominionException If the card was unable to be added to the pool
+	 */
+	protected void addCardToPool(int aIndex, Card aCard, int aTotal) throws DominionException
+	{
+		mGame.addCardToPool(aIndex, aCard, aTotal);
+		mWindow.refreshCardPool();
+	}
+	
+	/**
+	 * Returns a mapping of all the cards in the pool for the game this client is in.
+	 * 
+	 * @return
+	 */
+	protected CardStack[] getCardsInPool()
+	{
+		return mGame.getCardsInPool();
+	}
 	/**
 	 * Prints a message to the UI for this client.
 	 * 

@@ -95,7 +95,7 @@ public class Card {
 	 * 
 	 * @return The name of this card
 	 */
-	public String getName() {
+	public String toString() {
 		return mName;
 	}
 
