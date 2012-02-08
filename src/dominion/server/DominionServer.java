@@ -6,6 +6,7 @@ import java.io.IOException;
 import org.apache.log4j.Logger;
 
 import dominion.game.Card;
+import dominion.game.CardStack;
 import dominion.game.Cards;
 import dominion.game.DominionException;
 import dominion.game.DominionGame;
@@ -129,8 +130,17 @@ public class DominionServer extends TorqueNetworkServer{
 			}
 			lChosenCards[i] = i + 6;
 		}
-		sendMessage(DominionServerProtocol.createInitGameMessage(mGame.getCardsInPool()));
+		sendMessage(DominionServerProtocol.createStartGameMessage());
 	}
 	
+	/**
+	 * Returns a mapping of the cards in the pool for the game running on this server. Note that this mapping is a copy
+	 * of the original so modifications can be made without affecting the game.
+	 * @return
+	 */
+	protected CardStack[] getCardsInPool()
+	{
+		return mGame.getCardsInPool();
+	}
 	
 }

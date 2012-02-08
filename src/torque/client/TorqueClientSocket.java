@@ -7,6 +7,11 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.security.InvalidParameterException;
+import java.util.Deque;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Stack;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.apache.log4j.Logger;
 
@@ -25,6 +30,9 @@ public class TorqueClientSocket implements Runnable{
 	private boolean mHaveSTX = false;
 	
 	private StringBuffer lInBuffer = new StringBuffer();
+	
+	private final ConcurrentLinkedQueue<String> mMessageBuffer = new ConcurrentLinkedQueue<String>();
+	private final Thread mGuaranteedMessageSenderThread = new GuaranteedMessageThread();
 	
 	private Logger mLog = Logger.getLogger(TorqueClientSocket.class.getName());
 	
@@ -234,12 +242,38 @@ public class TorqueClientSocket implements Runnable{
 	 * STX and ETX characters to the message before sending it out.
 	 * 
 	 * @param aMessage The message to send
-	 * @throws IOException If an error occured while sending the message
+	 * @param aFlushBuffer Whether to flush the buffer after this message is written
 	 */
-	public void sendMessage(String aMessage) throws IOException 
+	public void sendMessage(String aMessage, boolean aFlushBuffer)
 	{
-		out.write(mOutSTX + aMessage + mOutETX);
-		out.flush();
+		try
+		{
+			out.write(mOutSTX + aMessage + mOutETX);
+			if(aFlushBuffer)
+			{
+				out.flush();
+			}
+		}
+		catch(IOException ignore) {}
+
+	}
+	
+	/**
+	 * Sends a guaranteed message out on the socket connection. If an error occurs while
+	 * trying to send the message it will retry until it is successfully sent. The message
+	 * queue is synchronous.
+	 * 
+	 * Note this WILL append the STX and ETX to the message before sending it out
+	 * 
+	 * @param aMessage The message to send
+	 */
+	public void sendMessageGuaranteed(String aMessage)
+	{
+		mMessageBuffer.add(mOutSTX + aMessage + mOutETX);
+		if(!mGuaranteedMessageSenderThread.isAlive())
+		{ //Git 'er runnin'
+			mGuaranteedMessageSenderThread.start();
+		}
 	}
 	
 	/**
@@ -278,5 +312,29 @@ public class TorqueClientSocket implements Runnable{
 	public void closeSocket() throws IOException
 	{
 		mSocket.close();
+	}
+	
+	private class GuaranteedMessageThread extends Thread
+	{
+		@Override
+		public void run()
+		{
+			while(!mMessageBuffer.isEmpty())
+			{
+				try
+				{
+					out.write(mMessageBuffer.peek());
+					out.flush();
+				}
+				catch(IOException ioe)
+				{ //Error occurred, sleep a bit before trying again
+					//TODO: Need better way of handling this
+					try {
+						Thread.sleep(250);
+					} catch (InterruptedException e) {}
+				}
+				mMessageBuffer.remove(); //Successfully send message so remove it from the queue
+			}
+		}
 	}
 }

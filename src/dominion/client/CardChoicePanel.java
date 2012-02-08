@@ -114,11 +114,7 @@ public class CardChoicePanel extends JPanel implements ActionListener{
 		else if (e.getActionCommand().equals(ACTION_COMMAND_APPLY))
 		{
 			Card lSelected = ((Card)mChoices.getSelectedItem());
-			try {
-				mClient.sendMessage(DominionClientProtocol.createChooseCardMessage(mID, lSelected.getID()));
-			} catch (IOException e1) { 
-				mLog.error(e1.getMessage());
-			}
+			mClient.sendMessageGuaranteed(DominionClientProtocol.createChooseCardMessage(mID, lSelected.getID()));
 		}
 	}
 }

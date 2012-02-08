@@ -10,7 +10,7 @@ import dominion.game.Card;
 import dominion.game.DominionException;
 import dominion.game.DominionGame;
 import dominion.game.DominionPlayer;
-import dominion.game.DominionGame.CardStack;
+import dominion.game.CardStack;
 
 import torque.client.TorqueNetworkClient;
 import torque.sockets.SocketCallback;
@@ -41,7 +41,7 @@ public class DominionClient extends TorqueNetworkClient{
 		mMe = new DominionPlayer(aName, -1, aIsAdmin, mGame);
 		mWindow = new DominionClientWindow(this);
 		mWindow.displayMessage(DominionClientWindow.TOKEN_JOINING_GAME);
-		this.sendMessage(DominionClientProtocol.createJoinGameMessage(aName, aIsAdmin));
+		this.sendMessageGuaranteed(DominionClientProtocol.createJoinGameMessage(aName, aIsAdmin));
 	}
 	
 

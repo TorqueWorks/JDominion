@@ -35,7 +35,7 @@ public class TorqueNetworkServer {
 	 */
 	public void sendMessage(String aMessage) throws IOException
 	{
-		mServerSocket.sendMessageToAllClients(aMessage);
+		mServerSocket.sendMessageToAllClients(aMessage, true);
 	}
 	
 	/**

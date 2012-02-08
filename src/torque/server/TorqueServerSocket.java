@@ -60,11 +60,24 @@ public class TorqueServerSocket{
 	 * Sends a message to all the open client sockets on this connection
 	 * 
 	 * @param aMessage The message to send
-	 * @throws IOException If an error occurred while sending one of the messages
+	 * @param aFlushBuffer Whether to flush the buffer after the message is written (send it immediately)
 	 */
-	public void sendMessageToAllClients(String aMessage) throws IOException {
+	public void sendMessageToAllClients(String aMessage, boolean aFlushBuffer) {
 		for(int i = 0; i < mClientSocketThreads.size(); i++) {
-			mClientSocketThreads.get(i).sendMessage(aMessage);
+			mClientSocketThreads.get(i).sendMessage(aMessage, aFlushBuffer);
+		}
+	}
+	
+	/**
+	 * Sends a guaranteed message to all the open client sockets on this connection. If an error
+	 * occurs when sending one of the messages that message will be retried until it succeeds.
+	 * 
+	 * @param aMessage The message to send
+	 */
+	public void sendMessageToAllClientsGuaranteed(String aMessage)
+	{
+		for(int i = 0; i < mClientSocketThreads.size(); i++) {
+			mClientSocketThreads.get(i).sendMessageGuaranteed(aMessage);
 		}
 	}
 	

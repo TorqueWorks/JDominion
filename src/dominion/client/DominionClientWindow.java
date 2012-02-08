@@ -24,7 +24,7 @@ import javax.swing.JTextArea;
 
 import org.apache.log4j.Logger;
 
-import dominion.game.DominionGame.CardStack;
+import dominion.game.CardStack;
 
 import torque.graphics.ImageLibrary;
 
@@ -163,12 +163,7 @@ public class DominionClientWindow extends JFrame implements ActionListener{
 	public void actionPerformed(ActionEvent arg0) {
 		if (arg0.getActionCommand().equals(ACTION_START_GAME))
 		{
-			try {
-				mClient.sendMessage(DominionClientProtocol.createStartGameMessage(mClient.getID()));
-			} catch (IOException e) {
-				mLog.error("Failed to start game - " + e.getMessage());
-				displayMessage(TOKEN_START_GAME_FAILED);
-			}
+			mClient.sendMessageGuaranteed(DominionClientProtocol.createStartGameMessage(mClient.getID()));
 			this.setEnabled(false);
 			mStartGame.setEnabled(false);
 			mStartGame.setText(TOKEN_STARTING_BUTTON_TEXT);

@@ -29,11 +29,22 @@ public class TorqueNetworkClient {
 	 * Sends a message out on the socket this client is connected to
 	 * 
 	 * @param aMessage The message to be sent
+	 * @param aFlushBuffer Whether to flush the buffer after writing the message (so it sends immediately)
 	 * @throws IOException If an error occurred while trying to send the message
 	 */
-	public void sendMessage(String aMessage) throws IOException 
+	public void sendMessage(String aMessage, boolean aFlushBuffer)
 	{
-		mClientSocketThread.sendMessage(aMessage);
+		mClientSocketThread.sendMessage(aMessage, aFlushBuffer);
+	}
+	
+	/**
+	 * Sends a guaranteed message out on the socket this client is connected to. If an error occurs while sending the message
+	 * it will be retried until it successfully sends.
+	 * @param aMessage The message to send
+	 */
+	public void sendMessageGuaranteed(String aMessage)
+	{
+		mClientSocketThread.sendMessageGuaranteed(aMessage);
 	}
 	
 	/**
