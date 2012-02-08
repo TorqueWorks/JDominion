@@ -32,7 +32,7 @@ public class TorqueClientSocket implements Runnable{
 	private StringBuffer lInBuffer = new StringBuffer();
 	
 	private final ConcurrentLinkedQueue<String> mMessageBuffer = new ConcurrentLinkedQueue<String>();
-	private final Thread mGuaranteedMessageSenderThread = new GuaranteedMessageThread();
+	private Thread mGuaranteedMessageSenderThread = new GuaranteedMessageThread();
 	
 	private Logger mLog = Logger.getLogger(TorqueClientSocket.class.getName());
 	
@@ -272,6 +272,7 @@ public class TorqueClientSocket implements Runnable{
 		mMessageBuffer.add(mOutSTX + aMessage + mOutETX);
 		if(!mGuaranteedMessageSenderThread.isAlive())
 		{ //Git 'er runnin'
+			mGuaranteedMessageSenderThread = new GuaranteedMessageThread();
 			mGuaranteedMessageSenderThread.start();
 		}
 	}

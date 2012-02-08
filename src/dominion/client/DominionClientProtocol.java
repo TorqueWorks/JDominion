@@ -253,7 +253,12 @@ public class DominionClientProtocol implements SocketCallback{
 		if(aTokens.length == DominionServerProtocol.CARD_CHOSEN_NUM_FIELDS)
 		{
 			int lIndex = Integer.parseInt(aTokens[1]);
-			Card lCard = Cards.getCardByID(Integer.parseInt(aTokens[2]));
+			Card lCard = null;
+			try {
+				lCard = Cards.getCardByID(Integer.parseInt(aTokens[2]));
+			}
+			catch(DominionException ignore) {}
+			
 			mClient.addCardToPool(lIndex, lCard, 10); //TODO: Don't hardcode number here
 		}
 	}
@@ -265,9 +270,12 @@ public class DominionClientProtocol implements SocketCallback{
 		{
 			int lCardID = Integer.parseInt(lPoolTokens[i]);
 			int lNum = Integer.parseInt(lPoolTokens[i + 1]);
-			mLog.debug("Got " + lNum + "of card " + Cards.mCards.get(lCardID).getPrintName());
+			Card lCard = null;
 			try {
-				mClient.addCardToPool(i / 2, Cards.getCardByID(lCardID), lNum);
+				lCard = Cards.getCardByID(lCardID);
+			} catch (DominionException ignore) {} //invalid card ids still need to be set to null in the card list
+			try {
+				mClient.addCardToPool(i / 2, lCard, lNum);
 			} catch (DominionException e) { //Just log and move on..not much else we can do
 				mLog.debug("Error adding card to pool from message - " + e.getMessage());
 				continue;

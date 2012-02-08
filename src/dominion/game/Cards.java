@@ -8,6 +8,7 @@ import dominion.game.Card.CARD_TYPE;
 
 public final class Cards {
 
+	public static final int NULL_CARD_ID = -1;
 	/**
 	 * Array of card objects. This is the only place they're defined, everywhere else uses the ID of the card and then references this
 	 * array to get the definition of the card. 
@@ -63,7 +64,7 @@ public final class Cards {
 		}
 		catch(IndexOutOfBoundsException e)
 		{
-			throw new DominionException("Cards::getCardByID", "Invalid ID");
+				throw new DominionException("Cards::getCardByID", "Invalid ID");
 		}
 	}
 }

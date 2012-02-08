@@ -185,12 +185,14 @@ public class DominionServerProtocol implements SocketCallback{
 	public static String createPoolListMessage(CardStack[] aCards)
 	{
 		StringBuilder lMessage = new StringBuilder(POOL_LIST_MSG);
+		lMessage.append(SERVER_MSG_DELIM);
 		for(CardStack lCS : aCards)
-		{
-			lMessage.append(SERVER_MSG_SUBFIELD_DELIM);
-			lMessage.append(lCS.getCard().getID());
+		{ //Add all the cards and their totals to the message
+			Card lCard = lCS.getCard();
+			lMessage.append(lCard==null?Cards.NULL_CARD_ID:lCard.getID()); //If card is null (empty slot) then put negative ID
 			lMessage.append(SERVER_MSG_SUBFIELD_DELIM);
 			lMessage.append(lCS.getTotal());
+			lMessage.append(SERVER_MSG_SUBFIELD_DELIM);
 		}
 		return lMessage.toString();
 	}
@@ -255,11 +257,14 @@ public class DominionServerProtocol implements SocketCallback{
 		{
 			int lCardIndex = Integer.parseInt(aTokens[1]);
 			int lCardID = Integer.parseInt(aTokens[2]);
-			try {
-				mServer.addCardToPool(lCardIndex, Cards.getCardByID(lCardID), 10); //TODO: Temp value here for number of cards
-			} catch (DominionException e) {
-				//Do nothing, dominion exceptions log themselves
+			Card lCard = null;
+			try
+			{
+				lCard = Cards.getCardByID(lCardID);
 			}
+			catch(DominionException ignore) {} //Non valid IDs will result in that slot being cleared
+			
+			mServer.addCardToPool(lCardIndex, lCard, 10); //TODO: Temp value here for number of cards
 		}
 	}
 	

@@ -69,7 +69,7 @@ public class DominionServer extends TorqueNetworkServer{
 			return;
 		}
 		try {
-			this.sendMessage(DominionServerProtocol.createCardChosenMessage(aIndex, aCard.getID()));
+			this.sendMessage(DominionServerProtocol.createCardChosenMessage(aIndex, aCard==null?Cards.NULL_CARD_ID:aCard.getID()));
 		} catch (IOException e) {
 			mLog.error(e.getMessage());
 		}

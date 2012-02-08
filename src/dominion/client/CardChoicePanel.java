@@ -70,6 +70,7 @@ public class CardChoicePanel extends JPanel implements ActionListener{
 		mChoices.setActionCommand(ACTION_COMMAND_CHOICES);
 		mChoices.addActionListener(this);
 		//TODO: Don't hardcode this
+		mChoices.addItem(null);
 		for(int i = 6; i < Cards.mCards.size(); i++)
 		{
 			mChoices.addItem(Cards.mCards.get(i));
@@ -107,6 +108,11 @@ public class CardChoicePanel extends JPanel implements ActionListener{
 		if(e.getActionCommand().equals(ACTION_COMMAND_CHOICES))
 		{ //New card was selected from dropdown, update the image and send a message
 			Card lSelected = ((Card)mChoices.getSelectedItem());
+			if(lSelected == null)
+			{ //Empty slot is selected, clear the icon and just return
+				mImage.setIcon(null);
+				return;
+			}
 			String lName = lSelected.toString().toLowerCase().replace(' ', '_');
 			Image lImage = ImageLibrary.getScaledImage(lName, new Dimension(IMAGE_WIDTH, IMAGE_HEIGHT));
 			mImage.setIcon(new ImageIcon(lImage));
@@ -114,7 +120,7 @@ public class CardChoicePanel extends JPanel implements ActionListener{
 		else if (e.getActionCommand().equals(ACTION_COMMAND_APPLY))
 		{
 			Card lSelected = ((Card)mChoices.getSelectedItem());
-			mClient.sendMessageGuaranteed(DominionClientProtocol.createChooseCardMessage(mID, lSelected.getID()));
+			mClient.sendMessageGuaranteed(DominionClientProtocol.createChooseCardMessage(mID, lSelected==null?Cards.NULL_CARD_ID:lSelected.getID()));
 		}
 	}
 }

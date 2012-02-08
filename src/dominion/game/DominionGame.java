@@ -18,9 +18,12 @@ public class DominionGame {
 	
 	private Logger mLog = Logger.getLogger(DominionGame.class.getName());
 	
-	protected DominionGame()
+	public DominionGame()
 	{
-		
+		for(int i = 0; i < mCardPool.length; i++)
+		{ //Initialize pool array to have empty card stacks
+			mCardPool[i] = new CardStack(null, 0);
+		}
 	}
 	/**
 	 * Adds a new player to this game and assigns them an ID. This will always either return a valid player
@@ -76,8 +79,8 @@ public class DominionGame {
 	}
 	
 	/**
-	 * Adds a card to the pool of available cards. If the card already exists in the pool the number of cards
-	 * is instead added to the current number of cards of this type.
+	 * Adds a card to the pool of available cards. This can be used to remove a card from the pool by passing NULL 
+	 * as the card.
 	 * 
 	 * This will overwrite any cards currently in the slot indicated by index, replacing them with the new card.
 	 * 
@@ -88,10 +91,8 @@ public class DominionGame {
 	 */
 	public void addCardToPool(int aIndex, Card aCard, int aTotal) throws DominionException
 	{
-		if(aCard == null) throw new DominionException("DominionGame::addCardToPool", "Card was null");
 		if(aIndex < 0 || aIndex >= mCardPool.length) throw new DominionException("DominionGame::addCardToPool", "Index out of bounds");
-		mLog.debug("Adding " + aTotal + " of Card " + aCard.getPrintName() + " to pool at index " + aIndex);
-		mCardPool[aIndex] = new CardStack(aCard, aTotal);
+		mCardPool[aIndex].setCard(aCard).setTotal(0);
 	}
 	
 	/**
