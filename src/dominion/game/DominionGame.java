@@ -18,6 +18,10 @@ public class DominionGame {
 	
 	private Logger mLog = Logger.getLogger(DominionGame.class.getName());
 	
+	protected DominionGame()
+	{
+		
+	}
 	/**
 	 * Adds a new player to this game and assigns them an ID. This will always either return a valid player
 	 * or throw an exception
@@ -130,50 +134,20 @@ public class DominionGame {
 	}
 	
 	/**
-	 * Returns a mapping of all the cards in this pool along with the number of that card left in the pool.
+	 * Returns a mapping of all the cards in this pool along with the number of that card left in the pool. Note
+	 * this is a copy of the original array so any modifications will not affect the originals.
+	 * 
 	 * @return
 	 */
 	public CardStack[] getCardsInPool()
 	{
-		return mCardPool;
+		CardStack[] lRet = new CardStack[mCardPool.length];
+		for(int i = 0; i < mCardPool.length; i++)
+		{
+			lRet[i] = new CardStack(mCardPool[i]);
+		}
+		return lRet;
 	}
 	
-	public class CardStack
-	{
-		private final Card mCard;
-		private int mTotal;
-		
-		public CardStack(Card aCard, int aTotal)
-		{
-			mCard = aCard;
-			mTotal = aTotal;
-		}
-		
-		/**
-		 * Gets the card this stack contains
-		 * @return
-		 */
-		public Card getCard()
-		{
-			return mCard;
-		}
-		
-		/**
-		 * Gets the total number of this card left in the stack
-		 * @return
-		 */
-		public int getTotal()
-		{
-			return mTotal;
-		}
-		
-		/**
-		 * Adds the difference to the total. Subtract cards by passing a negative number.
-		 * @param aDiff
-		 */
-		protected void alterTotal(int aDiff)
-		{
-			mTotal += aDiff;
-		}
-	}
+
 }

@@ -11,7 +11,7 @@ import dominion.game.Card;
 import dominion.game.Cards;
 import dominion.game.DominionException;
 import dominion.game.DominionPlayer;
-import dominion.game.DominionGame.CardStack;
+import dominion.game.CardStack;
 import torque.client.TorqueClientSocket;
 import torque.sockets.SocketCallback;
 
@@ -22,18 +22,23 @@ public class DominionServerProtocol implements SocketCallback{
 	
 	public static final String SERVER_MSG_DELIM = "^";
 	public static final String SERVER_MSG_DELIM_REGEX = Pattern.quote(SERVER_MSG_DELIM);
+	public static final String SERVER_MSG_SUBFIELD_DELIM = "~";
+	public static final String SERVER_MSG_SUBFIELD_DELIM_REGEX = Pattern.quote(SERVER_MSG_SUBFIELD_DELIM);
 	
 	//Message IDs
 	public static final String NEW_PLAYER_MSG = "NEWPLAYER";
 	public static final String JOIN_GAME_RESP_MSG = "JOINGAMERESP";
-	public static final String INIT_GAME_MSG = "INITGAME";
+	public static final String START_GAME_MSG = "STARTGAME";
 	public static final String CARD_CHOSEN_MSG = "CARDCHOSEN";
+	public static final String POOL_LIST_MSG = "POOLLIST";
 	
 	//Message field counts
 	public static final int NEW_PLAYER_MSG_NUM_FIELDS = 3;
 	public static final int JOIN_GAME_RESP_NUM_FIELDS = 2;
-	public static final int INIT_GAME_NUM_FIELDS = 2;
+	public static final int START_GAME_NUM_FIELDS = 2;
 	public static final int CARD_CHOSEN_NUM_FIELDS = 3;
+	public static final int POOL_LIST_NUM_FIELDS = 2;
+		
 	//Localization tokens
 	private static final String TOKEN_INVALID_MSG = "Invalid message format";
 	private Logger mLog = Logger.getLogger(DominionServerProtocol.class.getName());
@@ -75,6 +80,10 @@ public class DominionServerProtocol implements SocketCallback{
 			{
 				processChooseCardMessage(lTokens);
 			}
+			else if(lTokens[0].equals(DominionClientProtocol.REQUEST_POOL_LIST_MSG))
+			{
+				processRequestPoolListMessage(lTokens, aReceiver);
+			}
 			else
 			{
 				mLog.debug("Received unknown message - " + aMessage);
@@ -108,27 +117,17 @@ public class DominionServerProtocol implements SocketCallback{
 	}
 	
 	/**
-	 * Creates an init game message. This message indicates to a player that the game is starting. It
-	 * also includes the starting pool of cards.
-	 * This message has two fields:
+	 * Creates an start game message. This message indicates to a client that the game is starting.
+	 * This message has one fields:
 	 * <ol>
-	 * 		<li>MessageID - The INIT_GAME_MSG identifer</li>
-	 * 		<li>StartingCards - The starting cards for this game</li>
+	 * 		<li>MessageID - The STARTGAME_MSG identifer</li>
 	 * </ol>
 	 * @param aCardPool
 	 * @return The formatted message as a string
 	 */
-	public static String createInitGameMessage(CardStack[] aCardPool)
+	public static String createStartGameMessage()
 	{
-		StringBuilder lMessage = new StringBuilder(INIT_GAME_MSG);
-		lMessage.append(SERVER_MSG_DELIM);
-		for(CardStack lCS : aCardPool)
-		{
-			lMessage.append(lCS.getCard().getID());
-			lMessage.append("~");
-			lMessage.append(lCS.getTotal());
-			lMessage.append("~");
-		}
+		StringBuilder lMessage = new StringBuilder(START_GAME_MSG);
 		return lMessage.toString();
 	}
 	/**
@@ -171,6 +170,30 @@ public class DominionServerProtocol implements SocketCallback{
 		lMessage.append(aCardID);
 		return lMessage.toString();
 	}
+	
+	/**
+	 * Creates a POOL LIST message. This tells a client which cards are in the pool and how many of those
+	 * cards are left. This message has two fields:
+	 * <ol>
+	 * 		<li>MessageID - The POOL_LIST_MSG identifier</li>
+	 * 		<li>CardList - A subfield delimited list of each card followed by how many of it are in the pool</li>
+	 * </ol>
+	 * 
+	 * @param aCards The cards currently in the pool
+	 * @return The formatted message as a string
+	 */
+	public static String createPoolListMessage(CardStack[] aCards)
+	{
+		StringBuilder lMessage = new StringBuilder(POOL_LIST_MSG);
+		for(CardStack lCS : aCards)
+		{
+			lMessage.append(SERVER_MSG_SUBFIELD_DELIM);
+			lMessage.append(lCS.getCard().getID());
+			lMessage.append(SERVER_MSG_SUBFIELD_DELIM);
+			lMessage.append(lCS.getTotal());
+		}
+		return lMessage.toString();
+	}
 	/**
 	 * Process a received JOIN GAME message. This message indicates that a player wishes to join the game hosted
 	 * by this server. 
@@ -183,21 +206,17 @@ public class DominionServerProtocol implements SocketCallback{
 		mLog.debug("Process Join Game Message");
 		int lPlayerID = -1;
 		if(aTokens.length == DominionClientProtocol.JOIN_GAME_MSG_NUM_FIELDS)
-		{ //Only process the message if it has the right number of tokens...
+		{ 
 			boolean lIsAdmin = Boolean.parseBoolean(aTokens[2]);
 			try {
 				DominionPlayer lPlayer = mServer.addPlayer(aTokens[1], lIsAdmin);
 				lPlayerID = lPlayer.getID();
-			} catch (DominionException e) {
-				//Leave success as false...
-			}
+			} catch (DominionException e) {}
 		}
-		try 
-		{ //Send out response message indicating success of request
-			aReceiver.sendMessage(createJoinGameRespMessage(lPlayerID));
-		} catch (IOException e) {
-			mLog.error(e.getMessage());
-			return;
+		aReceiver.sendMessageGuaranteed(createJoinGameRespMessage(lPlayerID));
+		if(lPlayerID >= 0)
+		{ //Non-negative player ID means that the player joined the game successfully so send them a list of the cards in the pool
+			aReceiver.sendMessageGuaranteed(createPoolListMessage(mServer.getCardsInPool()));
 		}
 	}
 	
@@ -241,6 +260,23 @@ public class DominionServerProtocol implements SocketCallback{
 			} catch (DominionException e) {
 				//Do nothing, dominion exceptions log themselves
 			}
+		}
+	}
+	
+	/**
+	 * Processes a received REQUEST POOL LIST message. This message indicates a client wants the list of the cards
+	 * in the pool.
+	 * 
+	 * @param aTokens The contents of the message body
+	 * @param aReceiver The client which sent the message
+	 */
+	private void processRequestPoolListMessage(String[] aTokens, TorqueClientSocket aReceiver)
+	{
+		mLog.debug("Processing Request Pool List Message");
+		if(aTokens.length == DominionClientProtocol.REQUEST_POOL_LIST_MSG_NUM_FIELDS)
+		{
+			CardStack[] lCards = mServer.getCardsInPool();
+			aReceiver.sendMessageGuaranteed(createPoolListMessage(lCards));
 		}
 	}
 }

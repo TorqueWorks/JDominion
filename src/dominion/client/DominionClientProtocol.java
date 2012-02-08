@@ -25,10 +25,13 @@ public class DominionClientProtocol implements SocketCallback{
 	public static final String JOIN_GAME_MSG = "JOINGAME";
 	public static final String START_GAME_MSG = "STARTGAME";
 	public static final String CHOOSE_CARD_MSG = "CHOOSECARD";
+	public static final String REQUEST_POOL_LIST_MSG = "REQUESTPOOLLIST";
+	
 	//Message field count
 	public static final int JOIN_GAME_MSG_NUM_FIELDS = 3;
 	public static final int START_GAME_MSG_NUM_FIELDS = 2;
 	public static final int CHOOSE_CARD_MSG_NUM_FIELDS = 3;
+	public static final int REQUEST_POOL_LIST_MSG_NUM_FIELDS = 1;
 	
 	//Localization tokens
 	private static final String TOKEN_JOIN_GAME_SUCCESS = "Successfully joined game!";
@@ -67,13 +70,17 @@ public class DominionClientProtocol implements SocketCallback{
 			{
 				processJoinGameRespMessage(lTokens, aReceiver);
 			}
-			else if(lTokens[0].equals(DominionServerProtocol.INIT_GAME_MSG))
+			else if(lTokens[0].equals(DominionServerProtocol.START_GAME_MSG))
 			{
-				processInitGameMessage(lTokens);
+				processStartGameMessage(lTokens);
 			}
 			else if (lTokens[0].equals(DominionServerProtocol.CARD_CHOSEN_MSG))
 			{
 				processCardChosenMessage(lTokens);
+			}
+			else if (lTokens[0].equals(DominionServerProtocol.POOL_LIST_MSG))
+			{
+				processPoolListMessage(lTokens);
 			}
 			else
 			{
@@ -146,6 +153,18 @@ public class DominionClientProtocol implements SocketCallback{
 		lMessage.append(aCardID);
 		return lMessage.toString();
 	}
+	
+	/**
+	 * Creates a REQUESTPOOLLIST message which is used to request the server send an updated version of the pool
+	 * list to this client.
+	 * 
+	 * @return The complete REQUESTPOOLLIST message as a string
+	 */
+	public static String createRequestPoolListMessage()
+	{
+		StringBuilder lMessage = new StringBuilder(REQUEST_POOL_LIST_MSG);
+		return lMessage.toString();
+	}
 	/**
 	 * Process an incoming new player message. This message indicates that a new player has joined the game.
 	 * 
@@ -211,18 +230,11 @@ public class DominionClientProtocol implements SocketCallback{
 	 * 
 	 * @param aTokens The tokens from the body of the message
 	 */
-	private void processInitGameMessage(String[] aTokens)
+	private void processStartGameMessage(String[] aTokens)
 	{
 		mLog.debug("Process Init Game Message");
-		if(aTokens.length == DominionServerProtocol.INIT_GAME_NUM_FIELDS)
+		if(aTokens.length == DominionServerProtocol.START_GAME_NUM_FIELDS)
 		{
-			String[] lStartingCardTokens = aTokens[1].split(Pattern.quote("~"));
-			for(int i = 0; i < lStartingCardTokens.length - 1; i+=2) //The -1 from the length is so that we ignore the last item if there's an odd number of values
-			{
-				int lCardID = Integer.parseInt(lStartingCardTokens[i]);
-				int lNum = Integer.parseInt(lStartingCardTokens[i + 1]);
-				mLog.debug("Got " + lNum + "of starting card " + Cards.mCards.get(lCardID).getPrintName());
-			}
 			mClient.displayMessage(TOKEN_GAME_START);
 		}
 	}
@@ -243,6 +255,23 @@ public class DominionClientProtocol implements SocketCallback{
 			int lIndex = Integer.parseInt(aTokens[1]);
 			Card lCard = Cards.getCardByID(Integer.parseInt(aTokens[2]));
 			mClient.addCardToPool(lIndex, lCard, 10); //TODO: Don't hardcode number here
+		}
+	}
+	
+	private void processPoolListMessage(String aTokens[])
+	{
+		String[] lPoolTokens = aTokens[1].split(DominionServerProtocol.SERVER_MSG_SUBFIELD_DELIM_REGEX);
+		for(int i = 0; i < lPoolTokens.length - 1; i+=2) //The -1 from the length is so that we ignore the last item if there's an odd number of values
+		{
+			int lCardID = Integer.parseInt(lPoolTokens[i]);
+			int lNum = Integer.parseInt(lPoolTokens[i + 1]);
+			mLog.debug("Got " + lNum + "of card " + Cards.mCards.get(lCardID).getPrintName());
+			try {
+				mClient.addCardToPool(i / 2, Cards.getCardByID(lCardID), lNum);
+			} catch (DominionException e) { //Just log and move on..not much else we can do
+				mLog.debug("Error adding card to pool from message - " + e.getMessage());
+				continue;
+			}
 		}
 	}
 }
