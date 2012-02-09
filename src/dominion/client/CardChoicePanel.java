@@ -7,8 +7,6 @@ import java.awt.GridBagLayout;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
 
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
@@ -26,6 +24,8 @@ import dominion.game.Cards;
 
 public class CardChoicePanel extends JPanel implements ActionListener{
 
+	private static final long serialVersionUID = -4828551158429530587L;
+	
 	private JComboBox mChoices;
 	private JLabel mImage;
 	

@@ -21,8 +21,9 @@ public class TorqueNetworkClient {
 		 * @throws IOException
 		 */
 	public TorqueNetworkClient(int aPort, String aIPAddress, SocketCallback aCallback) throws UnknownHostException, IOException {
-		mClientSocketThread = new TorqueClientSocket(aPort, aIPAddress, aCallback);
-		new Thread(mClientSocketThread).start();
+		mClientSocketThread = new TorqueClientSocket(aPort, aIPAddress);
+		mClientSocketThread.setSocketCallback(aCallback);
+		mClientSocketThread.start();
 	}
 	
 	/**

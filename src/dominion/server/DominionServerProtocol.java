@@ -1,7 +1,6 @@
 package dominion.server;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
@@ -17,7 +16,7 @@ import torque.sockets.SocketCallback;
 
 public class DominionServerProtocol implements SocketCallback{
 
-	private DominionServer mServer;
+	private ServerPlayerHandler mPlayerHandler;
 	
 	
 	public static final String SERVER_MSG_DELIM = "^";
@@ -40,18 +39,12 @@ public class DominionServerProtocol implements SocketCallback{
 	public static final int POOL_LIST_NUM_FIELDS = 2;
 		
 	//Localization tokens
-	private static final String TOKEN_INVALID_MSG = "Invalid message format";
 	private Logger mLog = Logger.getLogger(DominionServerProtocol.class.getName());
 	
 
-	/**
-	 * Sets the server this Protocol will act against.
-	 * 
-	 * @param aServer The server this protocol belongs to
-	 */
-	public void setServer(DominionServer aServer)
+	protected DominionServerProtocol(ServerPlayerHandler aPlayerHandler)
 	{
-		mServer = aServer;
+		mPlayerHandler = aPlayerHandler;
 	}
 	
 	@Override
@@ -210,15 +203,12 @@ public class DominionServerProtocol implements SocketCallback{
 		if(aTokens.length == DominionClientProtocol.JOIN_GAME_MSG_NUM_FIELDS)
 		{ 
 			boolean lIsAdmin = Boolean.parseBoolean(aTokens[2]);
-			try {
-				DominionPlayer lPlayer = mServer.addPlayer(aTokens[1], lIsAdmin);
-				lPlayerID = lPlayer.getID();
-			} catch (DominionException e) {}
+			lPlayerID  = mPlayerHandler.joinGame(aTokens[1], lIsAdmin);
 		}
 		aReceiver.sendMessageGuaranteed(createJoinGameRespMessage(lPlayerID));
 		if(lPlayerID >= 0)
 		{ //Non-negative player ID means that the player joined the game successfully so send them a list of the cards in the pool
-			aReceiver.sendMessageGuaranteed(createPoolListMessage(mServer.getCardsInPool()));
+			aReceiver.sendMessageGuaranteed(createPoolListMessage(mPlayerHandler.getCardsInPool()));
 		}
 	}
 	
@@ -233,15 +223,7 @@ public class DominionServerProtocol implements SocketCallback{
 		mLog.debug("Processing Start Game message");
 		if(aTokens.length == DominionClientProtocol.START_GAME_MSG_NUM_FIELDS)
 		{
-			int lPlayerID = Integer.parseInt(aTokens[1]);
-			if(mServer.isPlayerAdmin(lPlayerID))
-			{ //Make sure the player is an admin before starting the game...
-				try {
-					mServer.startGame();
-				} catch (IOException e) {
-					mLog.error(e.getMessage());
-				}
-			}
+			mPlayerHandler.startGame();
 		}
 	}
 	/**
@@ -264,7 +246,7 @@ public class DominionServerProtocol implements SocketCallback{
 			}
 			catch(DominionException ignore) {} //Non valid IDs will result in that slot being cleared
 			
-			mServer.addCardToPool(lCardIndex, lCard, 10); //TODO: Temp value here for number of cards
+			mPlayerHandler.addCardToPool(lCardIndex, lCard, 10); //TODO: Temp value here for number of cards
 		}
 	}
 	
@@ -280,7 +262,7 @@ public class DominionServerProtocol implements SocketCallback{
 		mLog.debug("Processing Request Pool List Message");
 		if(aTokens.length == DominionClientProtocol.REQUEST_POOL_LIST_MSG_NUM_FIELDS)
 		{
-			CardStack[] lCards = mServer.getCardsInPool();
+			CardStack[] lCards = mPlayerHandler.getCardsInPool();
 			aReceiver.sendMessageGuaranteed(createPoolListMessage(lCards));
 		}
 	}

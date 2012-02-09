@@ -8,7 +8,6 @@ import org.apache.log4j.Logger;
 import dominion.game.Card;
 import dominion.game.Cards;
 import dominion.game.DominionException;
-import dominion.game.DominionPlayer;
 import dominion.server.DominionServerProtocol;
 
 import torque.client.TorqueClientSocket;
@@ -29,7 +28,7 @@ public class DominionClientProtocol implements SocketCallback{
 	
 	//Message field count
 	public static final int JOIN_GAME_MSG_NUM_FIELDS = 3;
-	public static final int START_GAME_MSG_NUM_FIELDS = 2;
+	public static final int START_GAME_MSG_NUM_FIELDS = 1;
 	public static final int CHOOSE_CARD_MSG_NUM_FIELDS = 3;
 	public static final int REQUEST_POOL_LIST_MSG_NUM_FIELDS = 1;
 	
@@ -126,8 +125,6 @@ public class DominionClientProtocol implements SocketCallback{
 	public static String createStartGameMessage(int aPlayerID)
 	{
 		StringBuilder lMessage = new StringBuilder(START_GAME_MSG);
-		lMessage.append(CLIENT_MSG_DELIM);
-		lMessage.append(aPlayerID);
 		return lMessage.toString();
 	}
 	
@@ -263,6 +260,12 @@ public class DominionClientProtocol implements SocketCallback{
 		}
 	}
 	
+	/**
+	 * Processes a received POOL LIST message. This message contains a list of all the cards in the pool for this game
+	 * and how many of each card are left
+	 * 
+	 * @param aTokens The tokens from the body of the message
+	 */
 	private void processPoolListMessage(String aTokens[])
 	{
 		String[] lPoolTokens = aTokens[1].split(DominionServerProtocol.SERVER_MSG_SUBFIELD_DELIM_REGEX);

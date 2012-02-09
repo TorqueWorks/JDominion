@@ -17,7 +17,7 @@ import org.apache.log4j.Logger;
 
 import torque.sockets.SocketCallback;
 
-public class TorqueClientSocket implements Runnable{
+public class TorqueClientSocket extends Thread{
 
 	private Socket mSocket = null;
 	private SocketCallback mSocketCallback = null;
@@ -48,18 +48,11 @@ public class TorqueClientSocket implements Runnable{
 	 * 
 	 * @param aIPAddress IPAddress/Hostname to connect to
 	 * @param aPort Port to connect to
-	 * @param aCallback The SocketCallback object used to process input
-	 * @param aChannelID The ID used to identify which ClientSocket a message came in on
 	 * @throws IOException
 	 */
-	public TorqueClientSocket(int aPort, String aIPAddress, SocketCallback aCallback) throws IOException
+	public TorqueClientSocket(int aPort, String aIPAddress) throws IOException
 	{
-		if(aCallback == null)
-		{
-			return; //TODO: Throw an exception or something probably
-		}
 		mSocket = new Socket(aIPAddress, aPort);
-		mSocketCallback = aCallback;
 		
 		//TODO Don't hardcode these
 		mInSTX = 0x02;
@@ -80,18 +73,12 @@ public class TorqueClientSocket implements Runnable{
 	 * 
 	 * @param aIPAddress IPAddress/Hostname to connect to
 	 * @param aPort Port to connect to
-	 * @param aCallback The SocketCallback object used to process input
 	 * @param aOutputEncoding The character encoding to use for outgoing communication
 	 * @throws IOException
 	 */
-	public TorqueClientSocket(int aPort, String aIPAddress, SocketCallback aCallback, String aOutputEncoding) throws IOException
+	public TorqueClientSocket(int aPort, String aIPAddress, String aOutputEncoding) throws IOException
 	{
-		if (aCallback == null)
-		{
-			return; //TODO: Throw an exception or something
-		}
 		mSocket = new Socket(aIPAddress, aPort);
-		mSocketCallback = aCallback;
 
 		//TODO Don't hardcode these
 		mInSTX = 0x02;
@@ -108,25 +95,19 @@ public class TorqueClientSocket implements Runnable{
 	}
 
 	/**
-	 * Creates a new connection object which listens and writes on the socket passed in. The SocketCallback class
-	 * is used to process input. This will also encode any outgoing communication in the format passed in.
+	 * Creates a new connection object which listens and writes on the socket passed in. This will also encode any 
+	 * outgoing communication in the format passed in.
 	 * 
 	 * @param aSocket The socket to communicate on
-	 * @param aCallback The SocketCallback object used to process input
 	 * @throws IOException
 	 */
-	public TorqueClientSocket(Socket aSocket, SocketCallback aCallback) throws IOException, InvalidParameterException
+	public TorqueClientSocket(Socket aSocket) throws IOException, InvalidParameterException
 	{
 		if(aSocket == null)
 		{
 			throw new InvalidParameterException("Socket cannot be null");
 		}
-		else if (aCallback == null)
-		{
-			throw new InvalidParameterException("SocketCallback cannot be null");
-		}
 		mSocket = aSocket;
-		mSocketCallback = aCallback;
 		
 		//TODO Don't hardcode these
 		mInSTX = 0x02;
@@ -152,6 +133,16 @@ public class TorqueClientSocket implements Runnable{
 		mInSTX = aNewSTX;
 	}
 	
+	/**
+	 * Sets the callback used to process any messages received from this connection. Passing NULL will result in all messages
+	 * being discarded.
+	 * 
+	 * @param aCallback The callback to use
+	 */
+	public void setSocketCallback(SocketCallback aCallback)
+	{
+		mSocketCallback = aCallback;
+	}
 	/**
 	 * Sets the character which will be appended to the beginning of messages going out.
 	 * 
@@ -209,7 +200,10 @@ public class TorqueClientSocket implements Runnable{
 				else if (lReadChar == mInETX) 
 				{ //End of message, send contents of buffer to be processed then reset buffer
 					mLog.debug("Found ETX (" + lInBuffer.toString() + ")");
-					mSocketCallback.processMessage(lInBuffer.toString(), this);
+					if(mSocketCallback != null)
+					{
+						mSocketCallback.processMessage(lInBuffer.toString(), this);
+					}
 					lInBuffer.setLength(0);
 					mHaveSTX = false;
 				}
@@ -248,7 +242,10 @@ public class TorqueClientSocket implements Runnable{
 	{
 		try
 		{
-			out.write(mOutSTX + aMessage + mOutETX);
+			synchronized(out)
+			{
+				out.write(mOutSTX + aMessage + mOutETX);
+			}
 			if(aFlushBuffer)
 			{
 				out.flush();
@@ -324,7 +321,10 @@ public class TorqueClientSocket implements Runnable{
 			{
 				try
 				{
-					out.write(mMessageBuffer.peek());
+					synchronized(out)
+					{
+						out.write(mMessageBuffer.peek());
+					}
 					out.flush();
 				}
 				catch(IOException ioe)

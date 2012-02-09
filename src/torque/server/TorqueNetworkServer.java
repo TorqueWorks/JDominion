@@ -1,14 +1,10 @@
 package torque.server;
 
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.security.InvalidParameterException;
-import java.util.HashMap;
-import java.util.Map;
-import javax.net.ServerSocketFactory;
 
 import org.apache.log4j.Logger;
 
+import torque.client.TorqueClientSocket;
 import torque.sockets.SocketCallback;
 
 public class TorqueNetworkServer {
@@ -20,11 +16,10 @@ public class TorqueNetworkServer {
 	/**
 	 * Creates a server
 	 * @param aPort
-	 * @param aCallback
 	 * @throws IOException
 	 */
-	public TorqueNetworkServer(int aPort, SocketCallback aCallback) throws IOException {
-		mServerSocket = new TorqueServerSocket(aPort, aCallback);
+	public TorqueNetworkServer(int aPort) throws IOException {
+		mServerSocket = new TorqueServerSocket(aPort, this);
 	}
 	
 	/**
@@ -48,4 +43,17 @@ public class TorqueNetworkServer {
 		mServerSocket.openConnections();
 	}
 
+	/**
+	 * Called whenever we get a new connection. Contains the ClientSocket used to communicate with the client
+	 * which connected to us.
+	 * 
+	 * This is also how you set the callback which is called for every new message
+	 * 
+	 * @param aConnection
+	 */
+	protected SocketCallback newConnection(TorqueClientSocket aConnection)
+	{
+		return null;
+		//Do nothing unless overridden
+	}
 }

@@ -108,6 +108,26 @@ public class Card {
 	}
 	
 	/**
+	 * Gets the cost of this card.
+	 * 
+	 * @return The cost of this card
+	 */
+	public int getCost()
+	{
+		return mCost;
+	}
+	
+	/**
+	 * Returns an array of all the {@link CARD_TYPE} of card that this card is. 
+	 * 
+	 * @return An array of CARD_TYPE for this card
+	 */
+	public CARD_TYPE[] getTypes()
+	{
+		return mTypes.clone();
+	}
+	
+	/**
 	 * Gets the name of this card in the form <i>name(ID)</i><br/>
 	 * ex. Copper(0)
 	 * 

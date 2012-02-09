@@ -1,11 +1,8 @@
 package main;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridLayout;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
@@ -17,17 +14,13 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import org.apache.log4j.*;
 
 import dominion.client.DominionClient;
 import dominion.client.DominionClientProtocol;
 import dominion.server.DominionServer;
 import dominion.server.DominionServerProtocol;
 
-import torque.client.TorqueNetworkClient;
-import torque.server.TorqueNetworkServer;
 public class HostOrJoinWindow extends JFrame implements ActionListener{
 
 	
@@ -114,7 +107,7 @@ public class HostOrJoinWindow extends JFrame implements ActionListener{
 	private boolean createServer(int aPort)
 	{
 		try {
-			new DominionServer(aPort, new DominionServerProtocol());
+			new DominionServer(aPort);
 		} catch (IOException e) 
 		{
 			e.printStackTrace();

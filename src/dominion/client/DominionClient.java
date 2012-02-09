@@ -2,7 +2,6 @@ package dominion.client;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.util.HashMap;
 
 import org.apache.log4j.Logger;
 
@@ -13,7 +12,6 @@ import dominion.game.DominionPlayer;
 import dominion.game.CardStack;
 
 import torque.client.TorqueNetworkClient;
-import torque.sockets.SocketCallback;
 
 public class DominionClient extends TorqueNetworkClient{
 

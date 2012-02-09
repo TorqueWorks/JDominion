@@ -13,8 +13,8 @@ import torque.sockets.SocketCallback;
 
 public class TorqueServerSocket{
 	
-	private ServerSocket mServerSocket = null;
-	private SocketCallback mCallback = null;
+	private final ServerSocket mServerSocket;
+	private final TorqueNetworkServer mServer;
 	
 	private static ArrayList<TorqueClientSocket> mClientSocketThreads = new ArrayList<TorqueClientSocket>();
 	private static ArrayList<Thread> mAcceptorThreads = new ArrayList<Thread>();
@@ -30,12 +30,12 @@ public class TorqueServerSocket{
 	 * being used to process messages that come in on this socket.
 	 * 
 	 * @param aPort The local port to use for this socket
-	 * @param aCallback The callback used to process messages
+	 * @param aServerSocketCallback The callback used to notify an object of events which occur
 	 * @throws IOException If an error occured while making the socket
 	 */
-	public TorqueServerSocket(int aPort, SocketCallback aCallback) throws IOException{
+	public TorqueServerSocket(int aPort, TorqueNetworkServer aServer) throws IOException{
 		mServerSocket = ServerSocketFactory.getDefault().createServerSocket(aPort);
-		mCallback = aCallback;
+		mServer = aServer;
 	}
 
 	/**
@@ -93,13 +93,14 @@ public class TorqueServerSocket{
 				while(!mServerSocket.isClosed())
 				{ //Keep accepting connections as long as the socket is open
 					mLog.debug("Listening for connection on Port " + mServerSocket.getLocalPort() + "...");
-					TorqueClientSocket cst = new TorqueClientSocket(mServerSocket.accept(), mCallback);
-					mLog.debug("Connection accepted on port " + cst.getLocalPort() + " from " + cst.getRemoteAddress() + ":" + cst.getRemotePort());
+					TorqueClientSocket lSocket = new TorqueClientSocket(mServerSocket.accept());
+					mLog.debug("Connection accepted on port " + lSocket.getLocalPort() + " from " + lSocket.getRemoteAddress() + ":" + lSocket.getRemotePort());
 					Thread.sleep(1000);  //Sleep for a second to allow the connection to initialize
-					new Thread(cst).start(); //Create a new thread to run the ClientSocket and start it...
+					lSocket.setSocketCallback(mServer.newConnection(lSocket));
+					lSocket.start();
 					synchronized (mClientSocketThreads)
 					{
-						mClientSocketThreads.add(cst);
+						mClientSocketThreads.add(lSocket);
 					}
 				}
 			} 

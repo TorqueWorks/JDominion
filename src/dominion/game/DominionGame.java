@@ -1,8 +1,5 @@
 package dominion.game;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.log4j.Logger;
 
 public class DominionGame {
@@ -87,12 +84,15 @@ public class DominionGame {
 	 * @param aIndex The index in the pool to add the card at
 	 * @param aCardID The ID of the card to add, see {@link Cards} for card definitions
 	 * @param aTotal The number of this card available in the pool
-	 * @throws DominionException 
 	 */
-	public void addCardToPool(int aIndex, Card aCard, int aTotal) throws DominionException
+	public void addCardToPool(int aIndex, Card aCard, int aTotal)
 	{
-		if(aIndex < 0 || aIndex >= mCardPool.length) throw new DominionException("DominionGame::addCardToPool", "Index out of bounds");
-		mCardPool[aIndex].setCard(aCard).setTotal(0);
+		if(aIndex < 0 || aIndex >= mCardPool.length)
+		{
+			mLog.error("Invalid index (" + aIndex + ") when trying to add card to pool");
+			return;
+		}
+		mCardPool[aIndex].setCard(aCard).setTotal(aTotal);
 	}
 	
 	/**
